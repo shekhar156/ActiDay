@@ -30,10 +30,16 @@
       <div class="android-status-bar">
         <span class="status-time" id="statusClock">09:41</span>
         <div class="status-icons">
-          <span class="status-icon" title="Full Signal">📶</span>
-          <span class="status-icon" title="WiFi">🛜</span>
+          <span class="status-icon" id="networkStatusIcon" title="Online">📶</span>
+          <span class="status-icon" id="wifiStatusIcon" title="WiFi">🛜</span>
           <span class="status-icon" id="batteryIcon" title="Battery 98%">🔋</span>
         </div>
+      </div>
+
+      <!-- Network Connectivity & Sync Status Floating Banner -->
+      <div class="connectivity-toast hidden" id="connectivityToast" role="status" aria-live="polite">
+        <span class="connectivity-indicator-dot" id="connectivityDot"></span>
+        <span class="connectivity-text" id="connectivityText">Offline Mode &bull; Changes saved locally</span>
       </div>
 
       <!-- App Header Bar -->
@@ -51,6 +57,9 @@
             <button class="icon-btn" id="streakBadgeBtn" title="Current Daily Streak">
               <span class="streak-flame">🔥</span>
               <span class="streak-num" id="headerStreakCount">7</span>
+            </button>
+            <button class="icon-btn" id="notifToggleBtn" title="Enable Reminders & Notifications" aria-label="Notifications">
+              <span id="notifIcon">🔔</span>
             </button>
             <button class="icon-btn" id="soundToggleBtn" title="Toggle Sound FX" aria-label="Toggle Sound">
               <span id="soundIcon">🔊</span>
@@ -779,8 +788,34 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('ServiceWorker registered:', reg.scope))
-          .catch(err => console.log('ServiceWorker error:', err));
+          .then(reg => {
+            console.log('ActiDay ServiceWorker registered with scope:', reg.scope);
+            window.swRegistration = reg;
+
+            // Notify user when an update is found
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              if (newWorker) {
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    if (window.showAppToast) {
+                      window.showAppToast('⚡ New version cached! Ready for offline use.', 'info');
+                    }
+                  }
+                });
+              }
+            });
+          })
+          .catch(err => console.warn('ServiceWorker registration failed:', err));
+
+        // Listen for messages dispatched by Service Worker (e.g., background sync)
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          if (event.data && event.data.type === 'SYNC_COMPLETED') {
+            if (window.showAppToast) {
+              window.showAppToast('✨ ' + (event.data.message || 'Background sync complete'), 'success');
+            }
+          }
+        });
       });
     }
   </script>

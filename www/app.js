@@ -224,6 +224,9 @@
   function saveState() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (!navigator.onLine && typeof triggerBackgroundSync === 'function') {
+        triggerBackgroundSync();
+      }
     } catch (e) {
       console.error('Failed to save to localStorage:', e);
     }
@@ -687,6 +690,8 @@
     }, 2800);
   }
 
+  window.showAppToast = showToast;
+
   // ==========================================================================
   // 3. UI ELEMENT REFERENCES
   // ==========================================================================
@@ -697,6 +702,13 @@
     currentDateBadge: document.getElementById('currentDateBadge'),
     greetingHeading: document.getElementById('greetingHeading'),
     headerStreakCount: document.getElementById('headerStreakCount'),
+    networkStatusIcon: document.getElementById('networkStatusIcon'),
+    wifiStatusIcon: document.getElementById('wifiStatusIcon'),
+    notifToggleBtn: document.getElementById('notifToggleBtn'),
+    notifIcon: document.getElementById('notifIcon'),
+    connectivityToast: document.getElementById('connectivityToast'),
+    connectivityDot: document.getElementById('connectivityDot'),
+    connectivityText: document.getElementById('connectivityText'),
     soundToggleBtn: document.getElementById('soundToggleBtn'),
     soundIcon: document.getElementById('soundIcon'),
     settingsBtn: document.getElementById('settingsBtn'),
@@ -1103,6 +1115,11 @@
         setTimeout(playCompletionSound, 300);
         awardXP(50, 'All Daily Routines Conquered');
         showToast('🎉 All daily routines completed! Fantastic job!', 'success');
+        dispatchSystemNotification(
+          '🎉 All Daily Routines Completed Today! (+50 XP)',
+          'You conquered today\'s entire timeline! Keep your streak burning 🔥',
+          'actiday-routine'
+        );
       }
     } else {
       playClickSound();
@@ -1678,6 +1695,11 @@
     currentSession = (currentSession % maxSessions) + 1;
     awardXP(50, 'Focus Session Logged');
     showToast(`🔔 Session complete! Logged ${minutesAdded} focus mins`, 'success');
+    dispatchSystemNotification(
+      '⏰ Focus Round Complete! (+50 XP)',
+      `Awesome job! Logged ${minutesAdded} minutes of deep focus. Take a 5-minute break.`,
+      'actiday-timer'
+    );
 
     timerRemainingSecs = timerDurationSecs;
     updateTimerUI();
@@ -2774,7 +2796,158 @@
   });
 
   // ==========================================================================
-  // 16. INITIALIZATION
+  // 16. CONNECTIVITY, BACKGROUND SYNC & NOTIFICATIONS CONTROLLER
+  // ==========================================================================
+  let offlineHideTimeout = null;
+
+  function updateConnectivityUI(isOnline) {
+    if (!el.connectivityToast) return;
+    clearTimeout(offlineHideTimeout);
+
+    if (!isOnline) {
+      el.connectivityToast.classList.remove('hidden', 'online-toast', 'sync-toast');
+      if (el.connectivityText) {
+        el.connectivityText.innerHTML = '⚡ Offline Mode &bull; Changes saved locally';
+      }
+      if (el.networkStatusIcon) {
+        el.networkStatusIcon.textContent = '🚫';
+        el.networkStatusIcon.title = 'Offline';
+      }
+      if (el.wifiStatusIcon) {
+        el.wifiStatusIcon.textContent = '📡';
+        el.wifiStatusIcon.title = 'Local Cache Only';
+      }
+      showToast('Working offline. All changes are saved locally!', 'normal');
+    } else {
+      el.connectivityToast.classList.remove('hidden', 'sync-toast');
+      el.connectivityToast.classList.add('online-toast');
+      if (el.connectivityText) {
+        el.connectivityText.innerHTML = '✓ Back Online &bull; Data synchronized';
+      }
+      if (el.networkStatusIcon) {
+        el.networkStatusIcon.textContent = '📶';
+        el.networkStatusIcon.title = 'Online';
+      }
+      if (el.wifiStatusIcon) {
+        el.wifiStatusIcon.textContent = '🛜';
+        el.wifiStatusIcon.title = 'Connected';
+      }
+
+      triggerBackgroundSync();
+
+      offlineHideTimeout = setTimeout(() => {
+        if (el.connectivityToast) el.connectivityToast.classList.add('hidden');
+      }, 3500);
+    }
+  }
+
+  function triggerBackgroundSync() {
+    if ('serviceWorker' in navigator && 'SyncManager' in window && window.swRegistration) {
+      try {
+        window.swRegistration.sync.register('sync-actiday-data').catch(err => {
+          console.log('Background sync registration note:', err);
+        });
+      } catch (e) {}
+    }
+  }
+
+  function dispatchSystemNotification(title, body, tag = 'actiday-notification') {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+
+    if (window.swRegistration && window.swRegistration.active) {
+      window.swRegistration.active.postMessage({
+        type: 'SHOW_NOTIFICATION',
+        title,
+        body,
+        tag
+      });
+    } else if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'SHOW_NOTIFICATION',
+        title,
+        body,
+        tag
+      });
+    } else {
+      try {
+        new Notification(title, {
+          body,
+          icon: './icons/icon.svg',
+          tag
+        });
+      } catch (e) {
+        console.log('Notification fallback:', e);
+      }
+    }
+  }
+
+  function updateNotifButtonUI() {
+    if (!el.notifToggleBtn) return;
+    if (!('Notification' in window)) {
+      el.notifToggleBtn.style.display = 'none';
+      return;
+    }
+    if (Notification.permission === 'granted') {
+      el.notifToggleBtn.classList.add('active-granted');
+      el.notifToggleBtn.title = 'Notifications Active (Focus & routine alerts enabled)';
+      if (el.notifIcon) el.notifIcon.textContent = '🔔';
+    } else if (Notification.permission === 'denied') {
+      el.notifToggleBtn.classList.remove('active-granted');
+      el.notifToggleBtn.title = 'Notifications Blocked in Browser Settings';
+      if (el.notifIcon) el.notifIcon.textContent = '🔕';
+    } else {
+      el.notifToggleBtn.classList.remove('active-granted');
+      el.notifToggleBtn.title = 'Enable Focus & Routine Notifications';
+      if (el.notifIcon) el.notifIcon.textContent = '🔔';
+    }
+  }
+
+  function requestNotificationAccess() {
+    if (!('Notification' in window)) {
+      showToast('Notifications are not supported by this browser.', 'alert');
+      return;
+    }
+    playClickSound();
+
+    if (Notification.permission === 'granted') {
+      dispatchSystemNotification(
+        'ActiDay Reminders Active 🔔',
+        'You are already subscribed to focus timer alarms and routine milestone alerts!'
+      );
+      showToast('Notifications are enabled and active! 🔔', 'success');
+      updateNotifButtonUI();
+      return;
+    }
+
+    Notification.requestPermission().then(permission => {
+      updateNotifButtonUI();
+      if (permission === 'granted') {
+        playCompletionSound();
+        triggerVibrate([60, 40, 60]);
+        awardXP(25, 'Enabled Productivity Alerts');
+        checkBadges();
+        showToast('🎉 Notifications enabled! Focus alerts will pop up.', 'success');
+        dispatchSystemNotification(
+          'ActiDay Notifications Active 🎉',
+          'You will now receive alerts for Pomodoro timer sessions & daily milestone streaks.'
+        );
+      } else if (permission === 'denied') {
+        showToast('Notification permission denied. Re-enable in site settings.', 'alert');
+      }
+    });
+  }
+
+  // Connectivity Listeners
+  window.addEventListener('online', () => updateConnectivityUI(true));
+  window.addEventListener('offline', () => updateConnectivityUI(false));
+
+  if (el.notifToggleBtn) {
+    el.notifToggleBtn.addEventListener('click', requestNotificationAccess);
+  }
+
+  // ==========================================================================
+  // 17. INITIALIZATION
   // ==========================================================================
   function init() {
     applyTheme(state.settings.theme);
@@ -2790,12 +2963,18 @@
     renderAnalytics();
     updateOverallProgress();
 
-    // Initialize new features
+    // Initialize gamification & interactive features
     renderGamification();
     checkBadges();
     renderTemplatesUI();
     initScratchpad();
     updateAmbientUI();
+
+    // Initialize Service Worker connectivity & notification UI
+    if (!navigator.onLine) {
+      updateConnectivityUI(false);
+    }
+    updateNotifButtonUI();
 
     if (el.ambientVolumeSlider && state.ambientSound) {
       el.ambientVolumeSlider.value = Math.round((state.ambientSound.volume || 0.65) * 100);
@@ -2807,7 +2986,7 @@
       el.ambientAutoSyncToggle.checked = state.ambientSound.autoSync !== false;
     }
 
-    console.log('Daily Routine Android App initialized successfully with extended feature suite.');
+    console.log('Daily Routine Android App initialized successfully with Service Worker offline & notification suite.');
   }
 
   document.addEventListener('DOMContentLoaded', init);

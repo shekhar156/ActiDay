@@ -2519,3 +2519,96 @@ input:checked + .slider:before {
   padding: 6px 10px;
 }
 
+/* ==========================================================================
+   10. Offline / Online Connectivity Banner & Service Worker Sync UI
+   ========================================================================== */
+.connectivity-toast {
+  position: relative;
+  z-index: 99;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  margin: 4px 16px 8px 16px;
+  border-radius: var(--radius-pill);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideDownToast 0.3s ease-out;
+}
+
+.connectivity-toast.online-toast {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #34d399;
+}
+
+.connectivity-toast.sync-toast {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.35);
+  color: #a5b4fc;
+}
+
+.connectivity-toast.hidden {
+  display: none !important;
+}
+
+.connectivity-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+  animation: dotPulse 1.8s infinite;
+  flex-shrink: 0;
+}
+
+.connectivity-toast.online-toast .connectivity-indicator-dot {
+  background-color: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: none;
+}
+
+.connectivity-toast.sync-toast .connectivity-indicator-dot {
+  background-color: #6366f1;
+  box-shadow: 0 0 8px #6366f1;
+  animation: dotPulse 1s infinite;
+}
+
+@keyframes slideDownToast {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dotPulse {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.7; }
+}
+
+/* Notification Button States */
+#notifToggleBtn.active-granted {
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+}
+
+#notifToggleBtn.active-granted #notifIcon {
+  filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.6));
+}
+
+
