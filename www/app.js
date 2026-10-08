@@ -2014,10 +2014,23 @@
     });
   });
 
-  // Settings modal
+  // Settings modal & dynamic theme colors
+  const THEME_STATUS_COLORS = {
+    'theme-dark': '#080b11',
+    'theme-light': '#f1f5f9',
+    'theme-neon': '#030712'
+  };
+
   function applyTheme(themeName) {
     document.body.className = themeName || 'theme-dark';
     if (el.themeSelect) el.themeSelect.value = themeName || 'theme-dark';
+
+    // Dynamically update OS title bar & task switcher theme-color
+    const themeColor = THEME_STATUS_COLORS[themeName] || '#080b11';
+    const metaEl = document.getElementById('appThemeColor');
+    if (metaEl) {
+      metaEl.setAttribute('content', themeColor);
+    }
   }
 
   if (el.settingsBtn) {
