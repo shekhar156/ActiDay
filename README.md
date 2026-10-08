@@ -1,4 +1,4 @@
-# 📱 Daily Routine & Habit Tracker (Android App)
+# 📱 ActiDay - Daily Routine & Habit Tracker (Android App & PWA)
 
 A modern, mobile-first Daily Routine, Habit Tracker, Focus Timer, and Reflection app built for Android devices.
 
@@ -78,14 +78,15 @@ A modern, mobile-first Daily Routine, Habit Tracker, Focus Timer, and Reflection
     - Copy to clipboard & clear with auto-save to local storage.
 
 11. **🎧 Built-in Web Audio & Haptics**
-    - 100% self-contained audio synthesis using Web Audio API.
+    - 100% self-contained audio synthesis using Web Audio API (ambient soundscapes, chimes, bells).
     - Android haptic vibration (`navigator.vibrate`) integration.
 
-12. **📱 Android Mobile Experience**
-    - Responsive design tailored for Android phone screens.
-    - AMOLED Deep Black (`#080b11`), Fresh Light, and Cyber Neon theme modes.
-    - PWA Manifest (`manifest.json`) and offline Service Worker (`sw.js`).
-    - Desktop view includes simulated Android phone frame with status bar, or full-screen toggle.
+12. **⚡ Advanced Service Worker & PWA Suite**
+    - **Stale-While-Revalidate & Dynamic Font Caching**: Caches local assets and Google Fonts for full offline rendering.
+    - **Real-Time Offline/Online Banner**: Live detection with visual toast and status bar indicator.
+    - **Push & Timer Notifications**: Native alerts for Pomodoro timer sessions and daily routine milestone streaks.
+    - **Background Sync API**: Queues routine actions and habit tracking while offline to sync automatically when reconnected.
+    - **Rich PWA Manifest**: Includes unique `id`, `description`, `orientation: portrait-primary`, `theme_color` synchronization, shortcuts, and high-res showcase screenshots.
 
 ---
 
@@ -104,8 +105,13 @@ Daily Activity/
     ├── index.html           # Main Android app interface
     ├── styles.css           # Glassmorphism & Material You design system
     ├── app.js               # Application logic, audio engine & state
-    ├── manifest.json        # PWA Web App Manifest
-    ├── sw.js                # Offline Service Worker
-    └── icons/
-        └── icon.svg         # App launcher icon
+    ├── manifest.json        # Rich PWA Web App Manifest
+    ├── sw.js                # Offline Service Worker (Cache, Sync, Push)
+    ├── icons/
+    │   └── icon.svg         # App launcher icon
+    └── screenshots/         # PWA store preview showcase screenshots
+        ├── routine-mobile.jpg
+        ├── timer-mobile.jpg
+        └── dashboard-wide.jpg
 ```
+
