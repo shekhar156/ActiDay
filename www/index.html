@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="description" content="Ultimate Daily Routine, Habit Tracker & Focus Timer App for Android">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Daily Routine - Android Productivity App</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  
+  <!-- Modern Font Stack -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="theme-dark">
+
+  <!-- Desktop Device Preview Frame Wrapper -->
+  <div class="device-wrapper" id="deviceWrapper">
+    <div class="mobile-frame" id="mobileFrame">
+      
+      <!-- Android Simulated Status Bar -->
+      <div class="android-status-bar">
+        <span class="status-time" id="statusClock">09:41</span>
+        <div class="status-icons">
+          <span class="status-icon" title="Full Signal">📶</span>
+          <span class="status-icon" title="WiFi">🛜</span>
+          <span class="status-icon" id="batteryIcon" title="Battery 98%">🔋</span>
+        </div>
+      </div>
+
+      <!-- App Header Bar -->
+      <header class="app-header">
+        <div class="header-main">
+          <div class="user-info">
+            <span class="date-badge" id="currentDateBadge">Today, Oct 8</span>
+            <h1 class="greeting-text" id="greetingHeading">Hello, Achiever ✨</h1>
+          </div>
+          <div class="header-actions">
+            <button class="icon-btn level-badge-btn" id="headerLevelBtn" title="Productivity Level & Badges (XP)">
+              <span class="level-icon">⚡</span>
+              <span class="level-text" id="headerLevelText">Lv. 2</span>
+            </button>
+            <button class="icon-btn" id="streakBadgeBtn" title="Current Daily Streak">
+              <span class="streak-flame">🔥</span>
+              <span class="streak-num" id="headerStreakCount">7</span>
+            </button>
+            <button class="icon-btn" id="soundToggleBtn" title="Toggle Sound FX" aria-label="Toggle Sound">
+              <span id="soundIcon">🔊</span>
+            </button>
+            <button class="icon-btn" id="settingsBtn" title="App Settings" aria-label="Settings">
+              ⚙️
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Clock & Quick Progress Ribbon -->
+        <div class="header-ribbon">
+          <div class="digital-clock-card">
+            <span class="clock-label">CURRENT TIME</span>
+            <span class="clock-display" id="liveDigitalClock">09:41:00</span>
+          </div>
+          <div class="quick-stat-card" id="quickRoutineStatCard">
+            <div class="stat-text-col">
+              <span class="stat-title">ROUTINE PROGRESS</span>
+              <span class="stat-percent" id="headerProgressPercent">0%</span>
+            </div>
+            <div class="mini-progress-ring">
+              <svg viewBox="0 0 36 36" class="circular-chart">
+                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path class="circle" id="headerRingProgress" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content Container with Scrollable View Area -->
+      <main class="app-main-content" id="appMainContent">
+
+        <!-- ================= TAB 1: ROUTINE TIMELINE ================= -->
+        <section class="tab-view active" id="tabRoutine">
+          
+          <!-- Happening Now Hero Widget -->
+          <div class="active-routine-hero" id="activeRoutineHero">
+            <div class="hero-top-row">
+              <span class="live-pill"><span class="pulse-dot"></span> HAPPENING NOW</span>
+              <span class="routine-time-remaining" id="heroTimeRemaining">45m left</span>
+            </div>
+            <div class="hero-body">
+              <div class="hero-icon-box" id="heroActivityEmoji">🎯</div>
+              <div class="hero-details">
+                <h3 class="hero-title" id="heroActivityTitle">Deep Focus & Learning</h3>
+                <p class="hero-subtitle" id="heroActivityInterval">09:00 AM - 11:30 AM</p>
+                <div class="hero-category-tag" id="heroCategoryTag">Productivity</div>
+              </div>
+            </div>
+            <div class="hero-progress-bar-wrap">
+              <div class="hero-progress-bar" id="heroProgressBar" style="width: 50%;"></div>
+            </div>
+            <div class="hero-footer-actions">
+              <button class="btn btn-secondary btn-sm" id="heroStartTimerBtn">⏱️ Focus Timer</button>
+              <button class="btn btn-primary btn-sm" id="heroCompleteBtn">✓ Mark Done</button>
+            </div>
+          </div>
+
+          <!-- Routine Top Actions: Templates & Add Activity -->
+          <div class="routine-top-actions">
+            <button class="btn btn-secondary btn-sm" id="openTemplatesModalBtn">
+              <span>📋 Schedule Presets</span>
+            </button>
+            <button class="btn btn-primary btn-sm" id="openAddRoutineTopBtn">
+              <span>+ Activity</span>
+            </button>
+          </div>
+
+          <!-- Time-of-Day Filter Pills -->
+          <div class="routine-filter-bar">
+            <button class="filter-pill active" data-filter="all">All Day</button>
+            <button class="filter-pill" data-filter="morning">🌅 Morning</button>
+            <button class="filter-pill" data-filter="afternoon">☀️ Afternoon</button>
+            <button class="filter-pill" data-filter="evening">🌆 Evening</button>
+            <button class="filter-pill" data-filter="night">🌙 Night</button>
+          </div>
+
+          <!-- Section Timeline List -->
+          <div class="routine-timeline-list" id="routineTimelineList">
+            <!-- Dynamically populated via app.js -->
+          </div>
+
+          <!-- Floating Add Routine Trigger Button -->
+          <div class="content-bottom-cta">
+            <button class="btn btn-primary btn-block" id="openAddRoutineModalBtn">
+              <span>+ Add New Routine Activity</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- ================= TAB 2: HABITS & STREAKS ================= -->
+        <section class="tab-view" id="tabHabits">
+          <div class="tab-header-box">
+            <div>
+              <h2 class="tab-heading">Daily Habits</h2>
+              <p class="tab-subheading">Build compounding momentum every day</p>
+            </div>
+            <button class="btn btn-primary btn-sm" id="openAddHabitModalBtn">+ New Habit</button>
+          </div>
+
+          <!-- Streak Highlight Card -->
+          <div class="streak-highlight-card">
+            <div class="streak-glow-icon">🔥</div>
+            <div class="streak-card-info">
+              <span class="streak-highlight-title">Best Streak Streak Active!</span>
+              <span class="streak-highlight-stat"><strong id="longestStreakDisplay">7</strong> Days in a row</span>
+              <p class="streak-highlight-quote">"Small disciplines repeated with consistency every day lead to great achievements."</p>
+            </div>
+          </div>
+
+          <!-- Habits List -->
+          <div class="habits-list" id="habitsList">
+            <!-- Dynamically populated via app.js -->
+          </div>
+        </section>
+
+        <!-- ================= TAB 3: TASKS & TO-DO CHECKLIST ================= -->
+        <section class="tab-view" id="tabTasks">
+          <div class="tab-header-box">
+            <div>
+              <h2 class="tab-heading">Today's Tasks</h2>
+              <p class="tab-subheading">Priority action checklist</p>
+            </div>
+            <button class="btn btn-ghost btn-sm" id="clearCompletedTasksBtn">🧹 Clear Done</button>
+          </div>
+
+          <!-- Quick Add Task Input Bar -->
+          <div class="quick-add-task-bar">
+            <input type="text" id="quickTaskInput" placeholder="Add a task for today..." maxlength="100" aria-label="Add a task for today">
+            <select id="quickTaskPriority" aria-label="Task Priority">
+              <option value="high">🔴 High</option>
+              <option value="medium" selected>🟡 Medium</option>
+              <option value="low">🟢 Low</option>
+            </select>
+            <button class="btn btn-primary" id="quickAddTaskBtn" aria-label="Add Task">+</button>
+          </div>
+
+          <!-- Tasks Filter Bar -->
+          <div class="tasks-filter-bar">
+            <button class="filter-pill active" data-task-filter="all">All (<span id="taskCountAll">0</span>)</button>
+            <button class="filter-pill" data-task-filter="pending">Pending (<span id="taskCountPending">0</span>)</button>
+            <button class="filter-pill" data-task-filter="high">🔴 Urgent</button>
+            <button class="filter-pill" data-task-filter="completed">Completed</button>
+          </div>
+
+          <!-- Tasks List -->
+          <div class="tasks-list" id="tasksList">
+            <!-- Dynamically populated via app.js -->
+          </div>
+        </section>
+
+        <!-- ================= TAB 4: FOCUS & POMODORO TIMER ================= -->
+        <section class="tab-view" id="tabFocus">
+          <div class="tab-header-box text-center">
+            <h2 class="tab-heading">Focus & Pomodoro</h2>
+            <p class="tab-subheading">Eliminate distractions and flow</p>
+          </div>
+
+          <!-- Timer Mode Switcher -->
+          <div class="timer-mode-selector">
+            <button class="timer-mode-btn active" data-mode="pomodoro" data-duration="25">🎯 Focus 25m</button>
+            <button class="timer-mode-btn" data-mode="shortBreak" data-duration="5">☕ Short 5m</button>
+            <button class="timer-mode-btn" data-mode="longBreak" data-duration="15">🌴 Long 15m</button>
+            <button class="timer-mode-btn" data-mode="custom" data-duration="50">⚡ Deep 50m</button>
+          </div>
+
+          <!-- Circular Timer Display -->
+          <div class="timer-circle-wrap">
+            <svg class="timer-svg" viewBox="0 0 260 260">
+              <defs>
+                <linearGradient id="timerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#6366f1" />
+                  <stop offset="50%" stop-color="#8b5cf6" />
+                  <stop offset="100%" stop-color="#06b6d4" />
+                </linearGradient>
+              </defs>
+              <circle class="timer-track" cx="130" cy="130" r="110" />
+              <circle class="timer-progress" id="timerProgressRing" cx="130" cy="130" r="110" />
+            </svg>
+            <div class="timer-content-center">
+              <span class="timer-session-badge" id="timerSessionBadge">SESSION 1 OF 4</span>
+              <span class="timer-digits" id="timerDigits">25:00</span>
+              <span class="timer-sub-status" id="timerSubStatus">Ready to focus</span>
+            </div>
+          </div>
+
+          <!-- Timer Control Buttons -->
+          <div class="timer-controls">
+            <button class="timer-control-btn secondary" id="timerResetBtn" title="Reset Timer">
+              ↺
+            </button>
+            <button class="timer-control-btn main" id="timerPlayBtn" title="Start/Pause">
+              ▶
+            </button>
+            <button class="timer-control-btn secondary" id="timerSkipBtn" title="Next Session">
+              ⏭
+            </button>
+          </div>
+
+          <!-- Focus Sound & Ambient Options -->
+          <div class="focus-ambient-options">
+            <div class="ambient-toggle-row">
+              <span>🔔 Sound Bell at Finish</span>
+              <label class="switch">
+                <input type="checkbox" id="timerAlarmToggle" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="ambient-toggle-row">
+              <span>📳 Haptic Vibration</span>
+              <label class="switch">
+                <input type="checkbox" id="timerVibrationToggle" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="ambient-toggle-row">
+              <span>⏱️ Subtle Metronome Tick</span>
+              <label class="switch">
+                <input type="checkbox" id="timerTickToggle">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Ambient Focus Soundscapes Synthesizer Card -->
+          <div class="ambient-sound-card">
+            <div class="ambient-card-header">
+              <div class="ambient-card-title-group">
+                <span class="ambient-badge">ZEN AUDIO</span>
+                <h3 class="ambient-heading">🎧 Ambient Soundscapes</h3>
+              </div>
+              <button class="btn btn-ghost btn-sm" id="ambientMasterToggleBtn">⏹️ Stop Sound</button>
+            </div>
+            <p class="ambient-card-sub">Layer calming procedural soundscapes & mask noise while in flow state</p>
+            
+            <div class="ambient-tiles-grid">
+              <button class="ambient-tile-btn" data-sound="rain">
+                <span class="ambient-tile-icon">🌧️</span>
+                <span class="ambient-tile-label">Rain</span>
+                <span class="ambient-eq-bars"><span class="eq-b1"></span><span class="eq-b2"></span><span class="eq-b3"></span></span>
+              </button>
+              <button class="ambient-tile-btn" data-sound="ocean">
+                <span class="ambient-tile-icon">🌊</span>
+                <span class="ambient-tile-label">Ocean</span>
+                <span class="ambient-eq-bars"><span class="eq-b1"></span><span class="eq-b2"></span><span class="eq-b3"></span></span>
+              </button>
+              <button class="ambient-tile-btn" data-sound="cafe">
+                <span class="ambient-tile-icon">☕</span>
+                <span class="ambient-tile-label">Cafe</span>
+                <span class="ambient-eq-bars"><span class="eq-b1"></span><span class="eq-b2"></span><span class="eq-b3"></span></span>
+              </button>
+              <button class="ambient-tile-btn" data-sound="forest">
+                <span class="ambient-tile-icon">🌲</span>
+                <span class="ambient-tile-label">Forest</span>
+                <span class="ambient-eq-bars"><span class="eq-b1"></span><span class="eq-b2"></span><span class="eq-b3"></span></span>
+              </button>
+              <button class="ambient-tile-btn" data-sound="brown">
+                <span class="ambient-tile-icon">🌌</span>
+                <span class="ambient-tile-label">Deep Noise</span>
+                <span class="ambient-eq-bars"><span class="eq-b1"></span><span class="eq-b2"></span><span class="eq-b3"></span></span>
+              </button>
+            </div>
+
+            <!-- Volume Slider & Sync Toggle -->
+            <div class="ambient-controls-row">
+              <div class="ambient-volume-wrap">
+                <span class="volume-icon">🔉</span>
+                <input type="range" id="ambientVolumeSlider" min="0" max="100" value="65" class="ambient-slider" aria-label="Ambient volume">
+                <span id="ambientVolumeVal" class="volume-val">65%</span>
+              </div>
+              <div class="ambient-sync-toggle">
+                <span>Sync with Timer</span>
+                <label class="switch">
+                  <input type="checkbox" id="ambientAutoSyncToggle" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zen Breathing Quick Trigger Card -->
+          <div class="zen-breathing-card">
+            <div class="zen-card-content">
+              <div class="zen-card-icon">🫁</div>
+              <div class="zen-card-info">
+                <h4>4-7-8 Breathing Reset</h4>
+                <p>Lower cortisol & regain focus in 2 minutes</p>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-sm" id="openBreathingModalBtn">Start Breathwork</button>
+          </div>
+        </section>
+
+        <!-- ================= TAB 5: INSIGHTS & REFLECTION ================= -->
+        <section class="tab-view" id="tabInsights">
+          <div class="tab-header-box">
+            <div>
+              <h2 class="tab-heading">Insights & Reflection</h2>
+              <p class="tab-subheading">Track your progress and mental state</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="resetDayConfirmBtn">↺ Reset Day</button>
+          </div>
+
+          <!-- Daily Mood & Reflection Card -->
+          <div class="reflection-card">
+            <span class="reflection-title">How do you feel today?</span>
+            <div class="mood-selector" id="moodSelector">
+              <button class="mood-btn" data-mood="amazing" title="Amazing">🤩</button>
+              <button class="mood-btn" data-mood="good" title="Good">😊</button>
+              <button class="mood-btn" data-mood="neutral" title="Neutral">😐</button>
+              <button class="mood-btn" data-mood="tired" title="Tired">🥱</button>
+              <button class="mood-btn" data-mood="stressed" title="Stressed">😣</button>
+            </div>
+            <div class="journal-box">
+              <label for="dailyReflectionNote" class="journal-label">Today's Reflection / Gratitude Note:</label>
+              <textarea id="dailyReflectionNote" rows="3" placeholder="What went well today? What will you do better tomorrow?"></textarea>
+              <div class="journal-save-status" id="journalSaveStatus">Auto-saved</div>
+            </div>
+          </div>
+
+          <!-- Weekly Analytics Card -->
+          <div class="analytics-card">
+            <div class="analytics-header">
+              <span class="analytics-title">7-Day Consistency</span>
+              <span class="analytics-badge" id="weeklyAverageRate">85% Avg</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="weeklyChartCanvas" width="340" height="160"></canvas>
+            </div>
+          </div>
+
+          <!-- All Time Summary Metrics -->
+          <div class="stats-grid">
+            <div class="stat-box">
+              <span class="stat-box-num" id="statRoutinesCompleted">0</span>
+              <span class="stat-box-label">Routines Done</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-box-num" id="statHabitsCompleted">0</span>
+              <span class="stat-box-label">Habits Logged</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-box-num" id="statFocusMinutes">0m</span>
+              <span class="stat-box-label">Focus Time</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-box-num" id="statTasksDone">0</span>
+              <span class="stat-box-label">Tasks Finished</span>
+            </div>
+          </div>
+
+          <!-- Data Backup & Android APK Export Details -->
+          <div class="settings-card">
+            <h3 class="settings-card-title">Data Backup & Device Sync</h3>
+            <p class="settings-card-desc">Keep your routine data safe or export to other devices.</p>
+            <div class="btn-group-row">
+              <button class="btn btn-secondary btn-sm" id="exportDataBtn">📥 Export Data (JSON)</button>
+              <button class="btn btn-secondary btn-sm" id="importDataBtn">📤 Import Backup</button>
+              <input type="file" id="importFileInput" accept=".json" style="display:none;">
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- Bottom Android Navigation Bar (5 Tabs) -->
+      <nav class="bottom-nav-bar" id="bottomNavBar">
+        <button class="nav-tab active" data-tab="tabRoutine" id="navRoutine">
+          <span class="nav-icon">🕒</span>
+          <span class="nav-label">Routine</span>
+        </button>
+        <button class="nav-tab" data-tab="tabHabits" id="navHabits">
+          <span class="nav-icon">🎯</span>
+          <span class="nav-label">Habits</span>
+        </button>
+        <button class="nav-tab" data-tab="tabTasks" id="navTasks">
+          <span class="nav-icon">✅</span>
+          <span class="nav-label">Tasks</span>
+        </button>
+        <button class="nav-tab" data-tab="tabFocus" id="navFocus">
+          <span class="nav-icon">⏱️</span>
+          <span class="nav-label">Focus</span>
+        </button>
+        <button class="nav-tab" data-tab="tabInsights" id="navInsights">
+          <span class="nav-icon">📊</span>
+          <span class="nav-label">Insights</span>
+        </button>
+      </nav>
+
+      <!-- Floating Quick Scratchpad / Brain Dump Trigger -->
+      <button class="fab-scratchpad-btn" id="fabScratchpadBtn" title="Quick Scratchpad / Brain Dump">
+        <span class="fab-icon">📝</span>
+        <span class="fab-dot" id="fabNoteDot"></span>
+      </button>
+
+    </div> <!-- End mobile-frame -->
+  </div> <!-- End device-wrapper -->
+
+  <!-- ================= MODALS & DIALOGS ================= -->
+
+  <!-- 1. Add / Edit Routine Activity Modal -->
+  <div class="modal-backdrop" id="routineModal">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3 id="routineModalTitle">Add Routine Activity</h3>
+        <button class="modal-close-btn" id="closeRoutineModalBtn">&times;</button>
+      </div>
+      <form id="routineForm">
+        <input type="hidden" id="routineEditId">
+        <div class="form-group">
+          <label for="routineTitleInput">Activity Title *</label>
+          <input type="text" id="routineTitleInput" required placeholder="e.g., Morning Workout, Study Machine Learning">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="routineStartTimeInput">Start Time *</label>
+            <input type="time" id="routineStartTimeInput" required value="07:00">
+          </div>
+          <div class="form-group flex-1">
+            <label for="routineEndTimeInput">End Time *</label>
+            <input type="time" id="routineEndTimeInput" required value="08:00">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="routineCategoryInput">Category</label>
+            <select id="routineCategoryInput">
+              <option value="Health">🧘 Health & Wellness</option>
+              <option value="Productivity" selected>💼 Productivity & Work</option>
+              <option value="Study">📚 Study & Learning</option>
+              <option value="Fitness">🏋️ Fitness & Exercise</option>
+              <option value="Mindfulness">🌿 Mindfulness & Peace</option>
+              <option value="Personal">🏠 Personal & Family</option>
+            </select>
+          </div>
+          <div class="form-group flex-1">
+            <label for="routineEmojiInput">Emoji Icon</label>
+            <input type="text" id="routineEmojiInput" value="⚡" maxlength="2" class="text-center emoji-input">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="routineNotesInput">Notes / Checklist (Optional)</label>
+          <input type="text" id="routineNotesInput" placeholder="e.g., Drink water, avoid phone, prepare desk">
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="cancelRoutineModalBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveRoutineModalBtn">Save Activity</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Add / Edit Habit Modal -->
+  <div class="modal-backdrop" id="habitModal">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3 id="habitModalTitle">Add New Daily Habit</h3>
+        <button class="modal-close-btn" id="closeHabitModalBtn">&times;</button>
+      </div>
+      <form id="habitForm">
+        <input type="hidden" id="habitEditId">
+        <div class="form-group">
+          <label for="habitTitleInput">Habit Name *</label>
+          <input type="text" id="habitTitleInput" required placeholder="e.g., Drink 8 Glasses of Water, Read 20 Pages">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="habitEmojiInput">Emoji Icon</label>
+            <input type="text" id="habitEmojiInput" value="💧" maxlength="2" class="text-center emoji-input">
+          </div>
+          <div class="form-group flex-1">
+            <label for="habitTypeInput">Tracking Type</label>
+            <select id="habitTypeInput">
+              <option value="boolean">Simple Check (Yes/No)</option>
+              <option value="counter" selected>Target Count (e.g. 8 times)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" id="habitTargetGroup">
+          <label for="habitTargetInput">Target Goal (Times / Day)</label>
+          <input type="number" id="habitTargetInput" min="1" max="100" value="8">
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="cancelHabitModalBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveHabitModalBtn">Save Habit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. Settings & Preferences Modal -->
+  <div class="modal-backdrop" id="settingsModal">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3>App Settings & Themes</h3>
+        <button class="modal-close-btn" id="closeSettingsModalBtn">&times;</button>
+      </div>
+      <div class="settings-content">
+        <div class="setting-row">
+          <div>
+            <strong>Theme Mode</strong>
+            <p class="setting-caption">Choose color theme</p>
+          </div>
+          <select id="themeSelect" aria-label="Theme Mode">
+            <option value="theme-dark">Midnight Dark (AMOLED)</option>
+            <option value="theme-light">Fresh Light</option>
+            <option value="theme-neon">Cyber Glow</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <strong>Sound Effects (Web Audio)</strong>
+            <p class="setting-caption">Play audio chimes on completion</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="testSoundBtn">🔊 Test Chime</button>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <strong>Haptic Vibration</strong>
+            <p class="setting-caption">Vibration on Android devices</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="testVibrateBtn">📳 Test Vibrate</button>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <strong>Android Desktop Bezel</strong>
+            <p class="setting-caption">Toggle simulated mobile frame</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="toggleDeviceFrameBtn">Toggle Frame</button>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <strong>Capacitor Android Build</strong>
+            <p class="setting-caption">Ready for APK packaging</p>
+          </div>
+          <span class="badge-success">Ready (v1.0.0)</span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-primary btn-block" id="doneSettingsModalBtn">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Gamification Level & Badges Showcase Modal -->
+  <div class="modal-backdrop" id="badgesModal">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-pill">ACHIEVEMENTS</span>
+          <h3>Level & Trophy Case</h3>
+        </div>
+        <button class="modal-close-btn" id="closeBadgesModalBtn">&times;</button>
+      </div>
+      
+      <!-- Current Level Showcase Card -->
+      <div class="level-showcase-banner">
+        <div class="level-banner-top">
+          <div class="level-badge-avatar" id="modalLevelEmoji">⚡</div>
+          <div class="level-banner-info">
+            <span class="level-banner-subtitle" id="modalLevelTitle">Consistent Builder</span>
+            <h4 class="level-banner-level" id="modalLevelNumber">Level 2</h4>
+          </div>
+          <div class="level-banner-xp-badge">
+            <span id="modalCurrentXP">240</span> XP
+          </div>
+        </div>
+        <div class="level-progress-wrap">
+          <div class="level-progress-bar" id="modalLevelProgressBar" style="width: 45%;"></div>
+        </div>
+        <div class="level-progress-labels">
+          <span id="modalXPToNext">110 XP to Level 3</span>
+          <span id="modalLevelNextTitle">Next: Momentum Rider 🚀</span>
+        </div>
+      </div>
+
+      <!-- XP Rules Guide -->
+      <div class="xp-rules-bar">
+        <span>✨ Earn XP: Routine (+25) • Habit (+20) • Focus (+50) • Task (+15) • Breathwork (+20)</span>
+      </div>
+
+      <!-- Badges Section -->
+      <div class="badges-section-header">
+        <h4>Trophy Badges (<span id="unlockedBadgesCount">0</span>/8)</h4>
+      </div>
+      <div class="badges-grid" id="badgesGrid">
+        <!-- Dynamically rendered via app.js -->
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-primary btn-block" id="closeBadgesModalDoneBtn">Keep Crushing It!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Routine Templates & Schedule Presets Modal -->
+  <div class="modal-backdrop" id="templatesModal">
+    <div class="modal-sheet modal-sheet-lg">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-pill">SCHEDULE PRESETS</span>
+          <h3>Routine Templates</h3>
+        </div>
+        <button class="modal-close-btn" id="closeTemplatesModalBtn">&times;</button>
+      </div>
+      <p class="modal-caption-text">Pick a curated schedule designed for focus, health, and momentum.</p>
+
+      <!-- Template Selection Tabs -->
+      <div class="templates-list" id="templatesList">
+        <!-- Dynamically rendered via app.js -->
+      </div>
+
+      <!-- Selected Template Preview Box -->
+      <div class="template-preview-card" id="templatePreviewCard">
+        <div class="preview-header">
+          <h4 id="previewTemplateTitle">Select a Preset</h4>
+          <span class="preview-count" id="previewTemplateCount">0 activities</span>
+        </div>
+        <div class="preview-items-scroll" id="previewItemsList"></div>
+      </div>
+
+      <div class="modal-actions-row">
+        <button type="button" class="btn btn-secondary flex-1" id="appendTemplateBtn">Add to Schedule</button>
+        <button type="button" class="btn btn-primary flex-1" id="replaceTemplateBtn">Replace Schedule</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. 4-7-8 Guided Breathing & Zen Reset Modal -->
+  <div class="modal-backdrop" id="breathingModal">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-pill">MINDFULNESS</span>
+          <h3>Zen Breathwork</h3>
+        </div>
+        <button class="modal-close-btn" id="closeBreathingModalBtn">&times;</button>
+      </div>
+
+      <!-- Breathing Pattern Selector -->
+      <div class="breathing-pattern-selector">
+        <button class="pattern-pill active" data-pattern="4-7-8">4-7-8 Relax</button>
+        <button class="pattern-pill" data-pattern="box">4-4-4-4 Box Breath</button>
+      </div>
+
+      <!-- Animated Breathing Circle -->
+      <div class="breathing-visualizer-container">
+        <div class="breathing-glow-ring" id="breathingGlowRing"></div>
+        <div class="breathing-orb" id="breathingOrb">
+          <span class="breathing-phase-text" id="breathingPhaseText">Ready</span>
+          <span class="breathing-counter-num" id="breathingCounterNum">4</span>
+          <span class="breathing-cycle-label" id="breathingCycleLabel">Cycle 1 of 4</span>
+        </div>
+      </div>
+
+      <p class="breathing-guide-tip" id="breathingGuideTip">Inhale deeply through your nose for 4 seconds...</p>
+
+      <!-- Breathing Controls -->
+      <div class="breathing-controls">
+        <button class="btn btn-secondary btn-sm" id="resetBreathingBtn">↺ Reset</button>
+        <button class="btn btn-primary" id="toggleBreathingBtn">▶ Start Session</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Quick Scratchpad / Brain Dump Drawer -->
+  <div class="modal-backdrop" id="scratchpadModal">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-pill">BRAIN DUMP</span>
+          <h3>Quick Scratchpad</h3>
+        </div>
+        <button class="modal-close-btn" id="closeScratchpadModalBtn">&times;</button>
+      </div>
+      <p class="modal-caption-text">Capture quick thoughts, bug ideas, or notes without breaking flow.</p>
+
+      <div class="scratchpad-editor-wrap">
+        <textarea id="scratchpadTextarea" placeholder="Write anything on your mind...&#10;• Review machine learning notes&#10;• Buy oats and almonds&#10;• Fix UI padding on mobile" aria-label="Quick Scratchpad"></textarea>
+      </div>
+
+      <div class="scratchpad-meta-row">
+        <span class="scratchpad-save-indicator" id="scratchpadSaveStatus">Saved locally ✓</span>
+        <span class="scratchpad-count" id="scratchpadWordCount">0 words • 0 chars</span>
+      </div>
+
+      <div class="scratchpad-actions-toolbar">
+        <button class="btn btn-secondary btn-sm" id="convertLineToTaskBtn" title="Convert top line to Task in Tab 3">
+          ➕ Convert to Task
+        </button>
+        <button class="btn btn-secondary btn-sm" id="copyScratchpadBtn" title="Copy to clipboard">
+          📋 Copy
+        </button>
+        <button class="btn btn-ghost btn-sm" id="clearScratchpadBtn" title="Clear notepad">
+          🧹 Clear
+        </button>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-primary btn-block" id="closeScratchpadDoneBtn">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Toast Notifications -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Audio Context & App Script -->
+  <script src="app.js"></script>
+
+  <!-- Service Worker Registration for PWA / Android -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('ServiceWorker registered:', reg.scope))
+          .catch(err => console.log('ServiceWorker error:', err));
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "short_name": "Routine",
+  "name": "Daily Routine & Habit Tracker",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#090d16",
+  "theme_color": "#4f46e5",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "categories": ["productivity", "lifestyle", "utilities"]
+}

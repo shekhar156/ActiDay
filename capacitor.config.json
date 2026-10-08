@@ -1,0 +1,9 @@
+{
+  "appId": "com.dailyroutine.app",
+  "appName": "Daily Routine",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}
