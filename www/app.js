@@ -2986,6 +2986,19 @@
       el.ambientAutoSyncToggle.checked = state.ambientSound.autoSync !== false;
     }
 
+    // Handle deep-link hash routing from PWA Manifest Shortcuts
+    function handleRouteHash() {
+      if (window.location.hash) {
+        const hash = window.location.hash.replace('#', '');
+        const validTabs = ['tabRoutine', 'tabHabits', 'tabTasks', 'tabFocus', 'tabInsights'];
+        if (validTabs.includes(hash)) {
+          switchTab(hash);
+        }
+      }
+    }
+    handleRouteHash();
+    window.addEventListener('hashchange', handleRouteHash);
+
     console.log('Daily Routine Android App initialized successfully with Service Worker offline & notification suite.');
   }
 

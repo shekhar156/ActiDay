@@ -1,6 +1,25 @@
 {
-  "short_name": "Routine",
-  "name": "Daily Routine & Habit Tracker",
+  "id": "/actiday-app",
+  "name": "ActiDay - Daily Routine & Habit Tracker",
+  "short_name": "ActiDay",
+  "description": "An all-in-one productivity and wellness companion featuring daily routine timelines, habit tracking with streaks, Pomodoro focus timer, synthesized ambient soundscapes, 4-7-8 breathwork, and gamified XP leveling.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui",
+    "window-controls-overlay"
+  ],
+  "orientation": "portrait-primary",
+  "background_color": "#080b11",
+  "theme_color": "#6366f1",
+  "categories": [
+    "productivity",
+    "lifestyle",
+    "health",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "icons/icon.svg",
@@ -9,10 +28,58 @@
       "purpose": "any maskable"
     }
   ],
-  "start_url": "./index.html",
-  "background_color": "#090d16",
-  "theme_color": "#4f46e5",
-  "display": "standalone",
-  "orientation": "portrait-primary",
-  "categories": ["productivity", "lifestyle", "utilities"]
+  "shortcuts": [
+    {
+      "name": "Focus Timer",
+      "short_name": "Focus",
+      "description": "Start a 25-minute Pomodoro focus session",
+      "url": "./index.html#tabFocus",
+      "icons": [
+        {
+          "src": "icons/icon.svg",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Daily Routine",
+      "short_name": "Routine",
+      "description": "View and manage today's schedule",
+      "url": "./index.html#tabRoutine",
+      "icons": [
+        {
+          "src": "icons/icon.svg",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Habits & Streaks",
+      "short_name": "Habits",
+      "description": "Track daily habits and preserve streaks",
+      "url": "./index.html#tabHabits",
+      "icons": [
+        {
+          "src": "icons/icon.svg",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Tasks Checklist",
+      "short_name": "Tasks",
+      "description": "Quick to-do tasks and priorities",
+      "url": "./index.html#tabTasks",
+      "icons": [
+        {
+          "src": "icons/icon.svg",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ]
 }
