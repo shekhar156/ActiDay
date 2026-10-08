@@ -28,6 +28,29 @@
       "purpose": "any maskable"
     }
   ],
+  "screenshots": [
+    {
+      "src": "screenshots/routine-mobile.jpg",
+      "sizes": "768x1376",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Daily Routine Timeline & Activity Scheduling"
+    },
+    {
+      "src": "screenshots/timer-mobile.jpg",
+      "sizes": "768x1376",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Pomodoro Focus Timer & Ambient Soundscapes"
+    },
+    {
+      "src": "screenshots/dashboard-wide.jpg",
+      "sizes": "1376x768",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "ActiDay Comprehensive Productivity Dashboard"
+    }
+  ],
   "shortcuts": [
     {
       "name": "Focus Timer",
