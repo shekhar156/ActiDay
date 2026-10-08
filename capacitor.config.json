@@ -1,8 +1,9 @@
 {
   "appId": "com.dailyroutine.app",
-  "appName": "Daily Routine",
+  "appName": "ActiDay",
   "webDir": "www",
   "bundledWebRuntime": false,
+  "backgroundColor": "#080b11",
   "server": {
     "androidScheme": "https"
   }
