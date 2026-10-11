@@ -4,37 +4,41 @@
 
 Version: 1.0.0
 Package: com.dailyroutine.app
-File:    ActiDay-v1.0.0.apk (6.1 MB)
+Files:   ActiDay.apk / ActiDay-v1.0.0.apk (6.10 MB)
+Location: C:\Users\Mahab\Desktop\ActiDay.apk
+          and project folder "export/"
 
 ------------------------------------------------------------------------
 HOW TO INSTALL ON YOUR ANDROID PHONE:
 ------------------------------------------------------------------------
 
 METHOD 1: PHONE TRANSFER (RECOMMENDED)
-1. Transfer "ActiDay-v1.0.0.apk" to your phone via:
+1. Transfer "ActiDay.apk" to your phone via:
    - USB cable (copy into phone's "Downloads" folder)
    - WhatsApp / Telegram (send the file to yourself)
-   - Google Drive / Email attachment
-2. On your phone, tap the APK file to open it.
+   - Google Drive / Email attachment / Bluetooth
+2. On your phone, tap the APK file in Downloads or File Manager.
 3. Select "Install".
    (Note: If prompted with "Install unknown apps", tap Settings and 
    enable "Allow from this source" for your file manager or browser).
-4. Tap "Open" and enjoy ActiDay!
+4. Tap "Open" and start using ActiDay!
 
 METHOD 2: VIA ADB / USB DEBUGGING (DEVELOPER MODE)
-If your phone is connected with USB Debugging enabled:
-   adb install -r ActiDay-v1.0.0.apk
+If your phone is connected with USB Debugging enabled, run:
+   "%LOCALAPPDATA%\Android\Sdk\platform-tools\adb.exe" install -r "C:\Users\Mahab\Desktop\ActiDay.apk"
 
 ------------------------------------------------------------------------
-FEATURES INCLUDED IN THIS BUILD:
+NEW & UPDATED FEATURES IN THIS BUILD:
 ------------------------------------------------------------------------
-- Daily Routine Timeline (Time-blocking & Happening Now hero card)
-- Habit Tracker with active flame streaks & 7-day mini heatmap
-- Priority To-Do Checklist with quick-add & filters
-- 25m Focus Pomodoro Timer with bell gong chime
-- Synthesized Ambient Soundscapes (Rain, Forest, Ocean Waves, White Noise)
-- 4-7-8 Zen Breathwork with visual expanding orb & singing bowls
-- Gamification with XP leveling (Lv. 1 - Lv. 20) & achievement badges
-- Quick Brain-Dump Scratchpad drawer with task converter
-- Offline-First Architecture with Service Worker caching
+- Header Theme View Mode: 1-tap cycle Day (☀️) / Night (🌙) / Default (🌓)
+- Custom Focus Time Inside Button: Custom session time controls are housed
+  directly inside the "⚙️ Custom" timer mode button (steppers, range slider,
+  quick chips 15m-120m, session intention, and advanced modal).
+- Compact Header (<= 10% height): 12-Hour digital live clock pill, profile avatar,
+  greeting, streak counter (🔥), alarms (⏰), and settings (⚙️).
+- Standard 5-Tab Navigation: Clean bottom navigation tabs (Routine, Habits, Tasks, Focus, Insights).
+- Soundscape Audio Generator: Ambient rain, forest, ocean, white noise.
+- Alarms & Wake Schedules: Customizable alarms with snooze and dismiss.
+- XP Leveling & Gamification: Lv. 1 - Lv. 20 with achievement badges.
+- Offline-First: 100% functional without internet connection.
 ========================================================================
