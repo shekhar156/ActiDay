@@ -1340,6 +1340,21 @@
     customRoundsInput: document.getElementById('customRoundsInput'),
     customFocusIntentionInput: document.getElementById('customFocusIntentionInput'),
     focusPresetCards: document.querySelectorAll('.focus-preset-card'),
+
+    // Inline Custom Focus Controller
+    focusInlineCard: document.getElementById('customFocusInlineCard'),
+    focusCustomMinsDisplay: document.getElementById('focusCustomMinsDisplay'),
+    focusMinsMinusBtn: document.getElementById('focusMinsMinusBtn'),
+    focusMinsPlusBtn: document.getElementById('focusMinsPlusBtn'),
+    focusInlineMinsInput: document.getElementById('focusInlineMinsInput'),
+    focusInlineMinsSlider: document.getElementById('focusInlineMinsSlider'),
+    focusPresetChips: document.querySelectorAll('.quick-preset-chips .preset-chip'),
+    focusInlineIntentionInput: document.getElementById('focusInlineIntentionInput'),
+
+    // Bottom View Mode Logo Switch (Only a Logo Switch at the Bottom)
+    bottomThemeLogoBtn: document.getElementById('bottomThemeLogoBtn'),
+    bottomThemeLogoDisc: document.getElementById('bottomThemeLogoDisc'),
+    bottomThemeLogoIcon: document.getElementById('bottomThemeLogoIcon'),
     zenFocusOverlay: document.getElementById('zenFocusOverlay'),
     exitZenModeBtn: document.getElementById('exitZenModeBtn'),
     zenDigits: document.getElementById('zenDigits'),
@@ -2644,6 +2659,148 @@
     });
   }
 
+  // ==========================================================================
+  // INLINE CUSTOM FOCUS TIME CONTROLLER (User Customizable Time)
+  // ==========================================================================
+  function setCustomFocusDuration(mins, intention = null, shouldResetTimer = true) {
+    const validMins = Math.min(180, Math.max(1, parseInt(mins, 10) || 25));
+    if (!state.focusConfig) {
+      state.focusConfig = {
+        focusMins: validMins,
+        shortBreakMins: 5,
+        longBreakMins: 15,
+        rounds: 4,
+        intention: 'Deep Work & Flow',
+        finishSound: 'bowl'
+      };
+    } else {
+      state.focusConfig.focusMins = validMins;
+      if (intention !== null && intention.trim()) {
+        state.focusConfig.intention = intention.trim();
+      }
+    }
+    saveState();
+
+    // Update inline and modal displays
+    if (el.focusCustomMinsDisplay) {
+      el.focusCustomMinsDisplay.textContent = `${validMins} mins`;
+    }
+    if (el.focusInlineMinsInput && el.focusInlineMinsInput.value != validMins) {
+      el.focusInlineMinsInput.value = validMins;
+    }
+    if (el.focusInlineMinsSlider && el.focusInlineMinsSlider.value != validMins) {
+      el.focusInlineMinsSlider.value = validMins;
+    }
+    if (el.customModeBadgeTime) {
+      el.customModeBadgeTime.textContent = `${validMins}m`;
+    }
+    if (el.customFocusDurationSlider) {
+      el.customFocusDurationSlider.value = Math.min(120, validMins);
+    }
+    if (el.customFocusDurationInput) {
+      el.customFocusDurationInput.value = validMins;
+    }
+    if (intention && el.focusIntentionDisplay) {
+      el.focusIntentionDisplay.textContent = `🎯 Focus: ${state.focusConfig.intention}`;
+    }
+    if (intention && el.zenIntentionText) {
+      el.zenIntentionText.textContent = state.focusConfig.intention;
+    }
+
+    // Preset chips active state
+    if (el.focusPresetChips) {
+      el.focusPresetChips.forEach(chip => {
+        const cMins = parseInt(chip.getAttribute('data-mins'), 10);
+        chip.classList.toggle('active', cMins === validMins);
+      });
+    }
+
+    // Set timer duration
+    timerDurationSecs = validMins * 60;
+
+    // Highlight Custom in the top timer mode selector
+    if (el.timerModeBtns) {
+      el.timerModeBtns.forEach(b => {
+        if (b.getAttribute('data-mode') === 'customConfig') b.classList.add('active');
+        else b.classList.remove('active');
+      });
+    }
+
+    // Update UI if timer is idle
+    if (shouldResetTimer && !isTimerRunning) {
+      resetTimer();
+    }
+  }
+
+  // Stepper Minus button (Decrement time by 5m, or 1m if <= 5m)
+  if (el.focusMinsMinusBtn) {
+    el.focusMinsMinusBtn.addEventListener('click', () => {
+      playClickSound();
+      triggerVibrate([25]);
+      const current = (state.focusConfig && state.focusConfig.focusMins) ? state.focusConfig.focusMins : 25;
+      const step = current <= 5 ? 1 : 5;
+      const newMins = Math.max(1, current - step);
+      setCustomFocusDuration(newMins);
+    });
+  }
+
+  // Stepper Plus button (Increment time by 5m)
+  if (el.focusMinsPlusBtn) {
+    el.focusMinsPlusBtn.addEventListener('click', () => {
+      playClickSound();
+      triggerVibrate([25]);
+      const current = (state.focusConfig && state.focusConfig.focusMins) ? state.focusConfig.focusMins : 25;
+      const newMins = Math.min(180, current + 5);
+      setCustomFocusDuration(newMins);
+    });
+  }
+
+  // Direct Number Input
+  if (el.focusInlineMinsInput) {
+    const handleNumInput = (e) => {
+      const val = parseInt(e.target.value, 10);
+      if (!isNaN(val) && val >= 1) {
+        setCustomFocusDuration(val);
+      }
+    };
+    el.focusInlineMinsInput.addEventListener('input', handleNumInput);
+    el.focusInlineMinsInput.addEventListener('change', handleNumInput);
+  }
+
+  // Smooth Range Slider
+  if (el.focusInlineMinsSlider) {
+    el.focusInlineMinsSlider.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10);
+      setCustomFocusDuration(val);
+    });
+  }
+
+  // Quick Preset Chips (15m, 25m, 35m, 45m, 60m, 90m, 120m)
+  if (el.focusPresetChips) {
+    el.focusPresetChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        playClickSound();
+        triggerVibrate([30]);
+        const mins = parseInt(chip.getAttribute('data-mins'), 10) || 25;
+        setCustomFocusDuration(mins);
+        showToast(`🎯 Focus timer set to ${mins} minutes`);
+      });
+    });
+  }
+
+  // Session Goal / Intention Input
+  if (el.focusInlineIntentionInput) {
+    el.focusInlineIntentionInput.addEventListener('input', (e) => {
+      const text = e.target.value.trim() || 'Deep Work & Flow';
+      if (!state.focusConfig) state.focusConfig = {};
+      state.focusConfig.intention = text;
+      saveState();
+      if (el.focusIntentionDisplay) el.focusIntentionDisplay.textContent = `🎯 Focus: ${text}`;
+      if (el.zenIntentionText) el.zenIntentionText.textContent = text;
+      if (el.customFocusIntentionInput) el.customFocusIntentionInput.value = text;
+    });
+  }
+
   if (el.customFocusForm) {
     el.customFocusForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -2661,16 +2818,7 @@
       };
       saveState();
 
-      // Activate Custom pill in UI
-      if (el.timerModeBtns) {
-        el.timerModeBtns.forEach(b => b.classList.remove('active'));
-      }
-      if (el.timerCustomModeBtn) {
-        el.timerCustomModeBtn.classList.add('active');
-      }
-
-      timerDurationSecs = focusMins * 60;
-      resetTimer();
+      setCustomFocusDuration(focusMins, intention, true);
       closeCustomFocusModal();
       awardXP(20, 'Customized Focus Workflow');
       showToast(`🎯 Focus configured: ${focusMins}m (${rounds} rounds)`, 'success');
@@ -3343,6 +3491,17 @@
       }
     }
 
+    // Update View Mode Bottom Logo Switch
+    if (el.bottomThemeLogoIcon) {
+      if (chosenMode === 'day') {
+        el.bottomThemeLogoIcon.textContent = '☀️';
+      } else if (chosenMode === 'night') {
+        el.bottomThemeLogoIcon.textContent = '🌙';
+      } else {
+        el.bottomThemeLogoIcon.textContent = '🌓';
+      }
+    }
+
     // Update Settings Modal Theme Cards
     if (el.settingsThemeCardDay) {
       el.settingsThemeCardDay.classList.toggle('active', chosenMode === 'day');
@@ -3369,6 +3528,33 @@
         localStorage.setItem('actiday_theme_mode', chosenMode);
       } catch (e) {}
     }
+  }
+
+  // View Mode: ONLY a Logo Switch at the Bottom (Tap to toggle Day ☀️ / Night 🌙 / Default 🌓)
+  if (el.bottomThemeLogoBtn) {
+    el.bottomThemeLogoBtn.addEventListener('click', () => {
+      playClickSound();
+      triggerVibrate([35]);
+      el.bottomThemeLogoBtn.classList.remove('rotate-anim');
+      void el.bottomThemeLogoBtn.offsetWidth;
+      el.bottomThemeLogoBtn.classList.add('rotate-anim');
+      setTimeout(() => {
+        if (el.bottomThemeLogoBtn) el.bottomThemeLogoBtn.classList.remove('rotate-anim');
+      }, 400);
+
+      const current = (state.settings && state.settings.themeMode) || 'default';
+      const order = ['default', 'day', 'night'];
+      const nextIndex = (order.indexOf(current) + 1) % order.length;
+      const nextMode = order[nextIndex];
+      applyThemeMode(nextMode);
+
+      const labels = {
+        default: '🌓 Default (System Adaptive) Mode',
+        day: '☀️ Day Mode (Luminous & Crisp)',
+        night: '🌙 Night Mode (Deep Dark OLED)'
+      };
+      showToast(labels[nextMode]);
+    });
   }
 
   // Header quick theme toggle cycling: Day -> Night -> Default
@@ -4446,6 +4632,14 @@
     }
     if (el.ambientAutoSyncToggle && state.ambientSound) {
       el.ambientAutoSyncToggle.checked = state.ambientSound.autoSync !== false;
+    }
+
+    // Initialize custom focus inline controls (customizable focus time)
+    const initFocusMins = (state.focusConfig && state.focusConfig.focusMins) ? state.focusConfig.focusMins : 25;
+    const initIntention = (state.focusConfig && state.focusConfig.intention) ? state.focusConfig.intention : 'Deep Work & Flow';
+    setCustomFocusDuration(initFocusMins, initIntention, false);
+    if (el.focusInlineIntentionInput) {
+      el.focusInlineIntentionInput.value = (state.focusConfig && state.focusConfig.intention) || '';
     }
 
     // Handle deep-link hash routing from PWA Manifest Shortcuts

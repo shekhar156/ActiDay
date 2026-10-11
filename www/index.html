@@ -68,21 +68,28 @@
         <span class="connectivity-text" id="connectivityText">Offline Mode &bull; Changes saved locally</span>
       </div>
 
-      <!-- App Header Bar -->
+      <!-- App Header Bar: Ultra-Compact Modern Bar (<= 10% screen height) -->
       <header class="app-header">
         <div class="header-main">
+          <!-- Left: User Profile & Compact Greeting -->
           <div class="user-info" id="headerProfileTrigger" title="Tap to customize User Profile & Name" role="button" tabindex="0">
             <div class="user-avatar-badge" id="headerUserAvatar">🚀</div>
             <div class="user-headings-col">
-              <span class="date-badge" id="currentDateBadge">Today, Oct 8</span>
-              <h1 class="greeting-text" id="greetingHeading">Hello, Mahab ✨</h1>
+              <span class="date-badge" id="currentDateBadge">Today</span>
+              <h1 class="greeting-text" id="greetingHeading">Mahab ✨</h1>
             </div>
           </div>
+
+          <!-- Center: Compact Live 12H Digital Clock Pill -->
+          <div class="header-clock-center">
+            <div class="header-clock-pill" id="digitalClockCard" title="Tap to toggle 12-Hour / 24-Hour mode" role="button" tabindex="0">
+              <span class="clock-icon">🕒</span>
+              <span class="clock-display" id="liveDigitalClock">09:41:00 <span class="clock-ampm">AM</span></span>
+            </div>
+          </div>
+
+          <!-- Right: Action Icons (Streak, Alarms, Settings) -->
           <div class="header-actions">
-            <button class="icon-btn level-badge-btn" id="headerLevelBtn" title="Productivity Level & Badges (XP)">
-              <span class="level-icon">⚡</span>
-              <span class="level-text" id="headerLevelText">Lv. 2</span>
-            </button>
             <button class="icon-btn" id="streakBadgeBtn" title="Current Daily Streak">
               <span class="streak-flame">🔥</span>
               <span class="streak-num" id="headerStreakCount">7</span>
@@ -91,61 +98,17 @@
               <span id="alarmIcon">⏰</span>
               <span class="alarm-badge-dot" id="alarmActiveDot"></span>
             </button>
-            <button class="icon-btn" id="notifToggleBtn" title="Enable Reminders & Notifications" aria-label="Notifications">
-              <span id="notifIcon">🔔</span>
-            </button>
-            <button class="icon-btn" id="soundToggleBtn" title="Toggle Sound FX" aria-label="Toggle Sound">
-              <span id="soundIcon">🔊</span>
-            </button>
-            <button class="icon-btn theme-header-btn" id="themeHeaderBtn" title="Toggle Day / Night / Default View" aria-label="Toggle Theme">
-              <span id="headerThemeIcon">🌓</span>
-            </button>
             <button class="icon-btn" id="settingsBtn" title="App Settings" aria-label="Settings">
               ⚙️
             </button>
-          </div>
-        </div>
 
-        <!-- Live Clock & Quick Progress Ribbon -->
-        <div class="header-ribbon">
-          <div class="digital-clock-card" id="digitalClockCard" title="Tap to toggle 12-Hour / 24-Hour mode" role="button" tabindex="0">
-            <span class="clock-label">CURRENT TIME <span style="font-size:0.6rem;opacity:0.8;">⇄</span></span>
-            <span class="clock-display" id="liveDigitalClock">09:41:00 <span class="clock-ampm">AM</span></span>
-          </div>
-          <div class="quick-stat-card" id="quickRoutineStatCard">
-            <div class="stat-text-col">
-              <span class="stat-title">ROUTINE PROGRESS</span>
-              <span class="stat-percent" id="headerProgressPercent">0%</span>
-            </div>
-            <div class="mini-progress-ring">
-              <svg viewBox="0 0 36 36" class="circular-chart">
-                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path class="circle" id="headerRingProgress" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <!-- User View Quick Theme Mode Selector (Day, Night, and Default System Mode) -->
-        <div class="user-view-theme-bar" id="userViewThemeBar">
-          <div class="theme-bar-meta">
-            <span class="theme-bar-label">VIEW MODE</span>
-            <span class="theme-bar-active-tag" id="userViewThemeStatusTag">🌓 System Auto</span>
-          </div>
-          <div class="theme-segmented-pills" role="radiogroup" aria-label="Day Night Default Theme Selector">
-            <button type="button" class="theme-pill-btn" id="themePillDay" data-mode="day" role="radio" aria-checked="false" title="Switch to Day Mode (Luminous & Crisp)">
-              <span class="pill-icon">☀️</span>
-              <span class="pill-name">Day</span>
+            <!-- Backwards-compatibility anchors for cached DOM elements -->
+            <button class="icon-btn level-badge-btn" id="headerLevelBtn" style="display:none;" aria-hidden="true">
+              <span class="level-icon">⚡</span><span class="level-text" id="headerLevelText">Lv. 2</span>
             </button>
-            <button type="button" class="theme-pill-btn" id="themePillNight" data-mode="night" role="radio" aria-checked="false" title="Switch to Night Mode (Deep OLED Dark)">
-              <span class="pill-icon">🌙</span>
-              <span class="pill-name">Night</span>
-            </button>
-            <button type="button" class="theme-pill-btn active" id="themePillDefault" data-mode="default" role="radio" aria-checked="true" title="Switch to Default (System Adaptive) Mode">
-              <span class="pill-icon">🌓</span>
-              <span class="pill-name">Default</span>
-              <span class="pill-badge" id="themePillSystemBadge">Auto</span>
-            </button>
+            <button class="icon-btn" id="notifToggleBtn" style="display:none;" aria-hidden="true"><span id="notifIcon">🔔</span></button>
+            <button class="icon-btn" id="soundToggleBtn" style="display:none;" aria-hidden="true"><span id="soundIcon">🔊</span></button>
+            <button class="icon-btn theme-header-btn" id="themeHeaderBtn" style="display:none;" aria-hidden="true"><span id="headerThemeIcon">🌓</span></button>
           </div>
         </div>
       </header>
@@ -155,6 +118,22 @@
 
         <!-- ================= TAB 1: ROUTINE TIMELINE ================= -->
         <section class="tab-view active" id="tabRoutine">
+          
+          <!-- Quick Routine Progress Ribbon (Scrolls naturally with content) -->
+          <div class="routine-scroll-ribbon" id="routineScrollRibbon">
+            <div class="quick-stat-card" id="quickRoutineStatCard">
+              <div class="stat-text-col">
+                <span class="stat-title">TODAY'S ROUTINE PROGRESS</span>
+                <span class="stat-percent" id="headerProgressPercent">0%</span>
+              </div>
+              <div class="mini-progress-ring">
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                  <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  <path class="circle" id="headerRingProgress" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                </svg>
+              </div>
+            </div>
+          </div>
           
           <!-- Happening Now Hero Widget -->
           <div class="active-routine-hero" id="activeRoutineHero">
@@ -295,7 +274,62 @@
             <button class="timer-mode-btn" data-mode="shortBreak" data-duration="5">☕ Short 5m</button>
             <button class="timer-mode-btn" data-mode="longBreak" data-duration="15">🌴 Long 15m</button>
             <button class="timer-mode-btn" data-mode="custom" data-duration="50">⚡ Deep 50m</button>
-            <button class="timer-mode-btn" data-mode="customConfig" id="timerCustomModeBtn">⚙️ Custom (<span id="customModeBadgeTime">45m</span>)</button>
+            <button class="timer-mode-btn" data-mode="customConfig" id="timerCustomModeBtn">⚙️ Custom (<span id="customModeBadgeTime">25m</span>)</button>
+          </div>
+
+          <!-- Inline Custom Focus Mode Time Controller (User can customize time) -->
+          <div class="custom-focus-inline-card" id="customFocusInlineCard">
+            <div class="custom-focus-card-header">
+              <div class="custom-focus-title-wrap">
+                <span class="custom-focus-badge">CUSTOM FOCUS TIME</span>
+                <span class="custom-focus-heading">Customize Session Time</span>
+              </div>
+              <span class="custom-focus-current-val" id="focusCustomMinsDisplay">25 mins</span>
+            </div>
+
+            <!-- Stepper Controller: [-] [ 25 mins ] [+] -->
+            <div class="custom-stepper-row">
+              <button type="button" class="stepper-btn minus-btn" id="focusMinsMinusBtn" title="Decrease time by 5 minutes" aria-label="Decrease minutes">
+                <span>−</span>
+              </button>
+              <div class="stepper-input-wrap">
+                <input type="number" id="focusInlineMinsInput" min="1" max="180" value="25" class="stepper-num-input" aria-label="Custom Focus Minutes">
+                <span class="stepper-unit">mins</span>
+              </div>
+              <button type="button" class="stepper-btn plus-btn" id="focusMinsPlusBtn" title="Increase time by 5 minutes" aria-label="Increase minutes">
+                <span>+</span>
+              </button>
+            </div>
+
+            <!-- Range Slider for smooth continuous time dragging -->
+            <div class="custom-slider-wrap">
+              <input type="range" id="focusInlineMinsSlider" min="1" max="180" value="25" class="custom-focus-range-slider" aria-label="Drag to set custom focus minutes">
+              <div class="slider-marks-row">
+                <span>1m</span>
+                <span>25m</span>
+                <span>45m</span>
+                <span>60m</span>
+                <span>90m</span>
+                <span>180m</span>
+              </div>
+            </div>
+
+            <!-- Quick Duration Preset Chips -->
+            <div class="quick-preset-chips" id="focusPresetChips">
+              <button type="button" class="preset-chip" data-mins="15">15m</button>
+              <button type="button" class="preset-chip active" data-mins="25">25m</button>
+              <button type="button" class="preset-chip" data-mins="35">35m</button>
+              <button type="button" class="preset-chip" data-mins="45">45m</button>
+              <button type="button" class="preset-chip" data-mins="60">60m</button>
+              <button type="button" class="preset-chip" data-mins="90">90m</button>
+              <button type="button" class="preset-chip" data-mins="120">120m</button>
+            </div>
+
+            <!-- Focus Session Goal / Intention Input -->
+            <div class="focus-intention-input-row">
+              <span class="intention-icon">🎯</span>
+              <input type="text" id="focusInlineIntentionInput" placeholder="Session goal (e.g. Android Feature, Coding, Study)..." maxlength="60" class="focus-intention-input">
+            </div>
           </div>
 
           <!-- Circular Timer Display -->
@@ -531,7 +565,7 @@
 
       </main>
 
-      <!-- Bottom Android Navigation Bar (5 Tabs) -->
+      <!-- Bottom Android Navigation Bar (5 Tabs + View Mode Logo Switch) -->
       <nav class="bottom-nav-bar" id="bottomNavBar">
         <button class="nav-tab active" data-tab="tabRoutine" id="navRoutine">
           <span class="nav-icon">🕒</span>
@@ -552,6 +586,13 @@
         <button class="nav-tab" data-tab="tabInsights" id="navInsights">
           <span class="nav-icon">📊</span>
           <span class="nav-label">Insights</span>
+        </button>
+
+        <!-- View Mode: ONLY a Logo Switch at the Bottom (Tap to toggle Day ☀️ / Night 🌙 / Default 🌓) -->
+        <button class="bottom-theme-logo-btn" id="bottomThemeLogoBtn" title="Theme View Mode (Tap to switch Day / Night / Default)" aria-label="Toggle Theme View Mode">
+          <span class="bottom-theme-logo-disc" id="bottomThemeLogoDisc">
+            <span class="bottom-theme-logo-icon" id="bottomThemeLogoIcon">🌓</span>
+          </span>
         </button>
       </nav>
 
