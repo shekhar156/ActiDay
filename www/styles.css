@@ -148,35 +148,47 @@ html, body {
   flex-direction: column;
 }
 
-/* Simulated Android Top Status Bar */
-.android-status-bar {
-  height: 32px;
-  padding: 6px 20px 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  background: transparent;
-  z-index: 10;
+/* Subtle speaker slit on desktop mockup bezel (hidden on real mobile) */
+.mobile-frame::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  z-index: 100;
+  pointer-events: none;
 }
 
-.status-time {
-  font-family: var(--font-mono);
-  letter-spacing: -0.5px;
+/* Native Mobile System Adaptations */
+@media (max-width: 600px), (display-mode: standalone) {
+  .device-wrapper {
+    padding: 0 !important;
+    min-height: 100% !important;
+    height: 100% !important;
+    background: var(--bg-app) !important;
+  }
+  .mobile-frame {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .mobile-frame::before {
+    display: none !important;
+  }
 }
 
-.status-icons {
-  display: flex;
-  gap: 6px;
-  font-size: 0.8rem;
-}
-
-/* App Header */
+/* App Header - Integrates seamlessly with real mobile system status bar */
 .app-header {
-  padding: 8px 18px 12px;
-  background: linear-gradient(180deg, rgba(8, 11, 17, 0.95) 0%, rgba(8, 11, 17, 0.6) 100%);
+  padding: max(16px, env(safe-area-inset-top, 16px)) max(18px, env(safe-area-inset-right, 18px)) 12px max(18px, env(safe-area-inset-left, 18px));
+  background: linear-gradient(180deg, rgba(8, 11, 17, 0.98) 0%, rgba(8, 11, 17, 0.8) 100%);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-subtle);
   flex-shrink: 0;
