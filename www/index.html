@@ -68,48 +68,68 @@
         <span class="connectivity-text" id="connectivityText">Offline Mode &bull; Changes saved locally</span>
       </div>
 
-      <!-- App Header Bar: Ultra-Compact Modern Bar (<= 10% screen height) -->
+      <!-- App Header Bar: Dual-Tier 20% Height (Upper 10% User Profile View, Lower 10% Header Features) -->
       <header class="app-header">
-        <div class="header-main">
-          <!-- Left: User Profile & Compact Greeting -->
-          <div class="user-info" id="headerProfileTrigger" title="Tap to customize User Profile & Name" role="button" tabindex="0">
-            <div class="user-avatar-badge" id="headerUserAvatar">🚀</div>
-            <div class="user-headings-col">
-              <span class="date-badge" id="currentDateBadge">Today</span>
+        <!-- Upper 10%: Dedicated User Profile View -->
+        <div class="header-tier-upper">
+          <div class="header-profile-box" id="headerProfileTrigger" title="Tap to customize User Profile & Name" role="button" tabindex="0">
+            <div class="header-avatar-wrap">
+              <div class="user-avatar-badge" id="headerUserAvatar">🚀</div>
+              <span class="avatar-online-dot"></span>
+            </div>
+            <div class="header-profile-meta">
+              <div class="header-profile-topline">
+                <span class="date-badge" id="currentDateBadge">Today</span>
+                <span class="profile-role-tag" id="headerUserTitle">Consistency Achiever</span>
+              </div>
               <h1 class="greeting-text" id="greetingHeading">Mahab ✨</h1>
             </div>
           </div>
 
-          <!-- Center: Compact Live 12H Digital Clock Pill -->
-          <div class="header-clock-center">
-            <div class="header-clock-pill" id="digitalClockCard" title="Tap to toggle 12-Hour / 24-Hour mode" role="button" tabindex="0">
-              <span class="clock-icon">🕒</span>
-              <span class="clock-display" id="liveDigitalClock">09:41:00 <span class="clock-ampm">AM</span></span>
-            </div>
+          <div class="header-profile-actions">
+            <button class="level-badge-btn" id="headerLevelBtn" title="Current Gamification Level & Badges (Tap to view)" aria-label="Level and Badges">
+              <span class="level-icon">⚡</span>
+              <span class="level-text" id="headerLevelText">Lv. 2</span>
+            </button>
+            <button class="icon-btn edit-profile-btn" id="headerEditProfileBtn" title="Customize Profile & Greeting" aria-label="Edit Profile">
+              ✏️
+            </button>
+          </div>
+        </div>
+
+        <!-- Lower 10%: Another Features of the Header -->
+        <div class="header-tier-lower">
+          <!-- Live 12-Hour Digital Clock Pill -->
+          <div class="header-clock-pill" id="digitalClockCard" title="Tap to toggle 12-Hour / 24-Hour mode" role="button" tabindex="0">
+            <span class="clock-icon">🕒</span>
+            <span class="clock-display" id="liveDigitalClock">09:41:00 <span class="clock-ampm">AM</span></span>
           </div>
 
-          <!-- Right: Action Icons (Streak, Alarms, Settings) -->
-          <div class="header-actions">
-            <button class="icon-btn" id="streakBadgeBtn" title="Current Daily Streak">
+          <!-- Feature Action Icons (Streak, Alarms, Theme View Mode, Settings) -->
+          <div class="header-feature-actions">
+            <!-- Streak Flame -->
+            <button class="icon-btn streak-header-btn" id="streakBadgeBtn" title="Current Daily Streak">
               <span class="streak-flame">🔥</span>
               <span class="streak-num" id="headerStreakCount">7</span>
             </button>
+
+            <!-- Alarms & Wake Schedules -->
             <button class="icon-btn alarm-header-btn" id="alarmHeaderBtn" title="Alarms & Wake Schedules" aria-label="Alarms">
               <span id="alarmIcon">⏰</span>
               <span class="alarm-badge-dot" id="alarmActiveDot"></span>
             </button>
+
             <!-- Theme View Mode Switcher in Header (Day ☀️ / Night 🌙 / Default 🌓) -->
             <button class="icon-btn theme-header-btn" id="themeHeaderBtn" title="Theme View Mode: Tap to cycle Day ☀️ / Night 🌙 / Default 🌓" aria-label="Toggle Theme View Mode">
               <span id="headerThemeIcon" class="theme-header-icon">🌓</span>
             </button>
-            <button class="icon-btn" id="settingsBtn" title="App Settings" aria-label="Settings">
+
+            <!-- Settings -->
+            <button class="icon-btn settings-header-btn" id="settingsBtn" title="App Settings" aria-label="Settings">
               ⚙️
             </button>
 
-            <!-- Backwards-compatibility anchors for cached DOM elements -->
-            <button class="icon-btn level-badge-btn" id="headerLevelBtn" style="display:none;" aria-hidden="true">
-              <span class="level-icon">⚡</span><span class="level-text" id="headerLevelText">Lv. 2</span>
-            </button>
+            <!-- Compatibility anchors for cached DOM queries -->
             <button class="icon-btn" id="notifToggleBtn" style="display:none;" aria-hidden="true"><span id="notifIcon">🔔</span></button>
             <button class="icon-btn" id="soundToggleBtn" style="display:none;" aria-hidden="true"><span id="soundIcon">🔊</span></button>
           </div>

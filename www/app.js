@@ -1238,6 +1238,8 @@
     profilePreviewAvatar: document.getElementById('profilePreviewAvatar'),
     profilePreviewName: document.getElementById('profilePreviewName'),
     profilePreviewTitle: document.getElementById('profilePreviewTitle'),
+    headerUserTitle: document.getElementById('headerUserTitle'),
+    headerEditProfileBtn: document.getElementById('headerEditProfileBtn'),
     profileNameInput: document.getElementById('profileNameInput'),
     profileTitleInput: document.getElementById('profileTitleInput'),
     avatarOptionBtns: document.querySelectorAll('.avatar-option-btn'),
@@ -3229,6 +3231,7 @@
     const title = prof.title || 'Consistency Achiever';
 
     if (el.headerUserAvatar) el.headerUserAvatar.textContent = avatar;
+    if (el.headerUserTitle) el.headerUserTitle.textContent = title;
     if (el.profilePreviewAvatar) el.profilePreviewAvatar.textContent = avatar;
     if (el.profilePreviewName) el.profilePreviewName.textContent = name;
     if (el.profilePreviewTitle) el.profilePreviewTitle.textContent = title;
@@ -3259,6 +3262,18 @@
     });
   }
 
+  // Header profile edit button click
+  if (el.headerEditProfileBtn) {
+    el.headerEditProfileBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      playClickSound();
+      if (el.settingsModal) el.settingsModal.classList.add('open');
+      if (el.profileNameInput) {
+        setTimeout(() => el.profileNameInput.focus(), 250);
+      }
+    });
+  }
+
   // Live profile input listeners
   if (el.profileNameInput) {
     el.profileNameInput.addEventListener('input', (e) => {
@@ -3274,6 +3289,7 @@
     el.profileTitleInput.addEventListener('input', (e) => {
       const val = e.target.value.trim() || 'Daily Consistency';
       state.profile.title = val;
+      if (el.headerUserTitle) el.headerUserTitle.textContent = val;
       if (el.profilePreviewTitle) el.profilePreviewTitle.textContent = val;
       saveState();
     });

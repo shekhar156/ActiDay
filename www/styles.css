@@ -260,82 +260,109 @@ h1, h2, h3, h4, .greeting-text, .hero-title, .tab-heading, .section-title, .moda
   }
 }
 
-/* App Header - Strictly Minimized to <= 10% of Screen Height (~56px) */
+/* App Header - 20% of Screen Height (Dual-Tier: Upper 10% User Profile View, Lower 10% Header Features) */
 .app-header {
-  height: 56px;
-  max-height: 10vh;
-  min-height: 52px;
-  padding: max(6px, env(safe-area-inset-top, 6px)) 12px 6px 12px;
+  min-height: 106px;
+  max-height: 20vh;
+  height: auto;
+  padding: max(8px, env(safe-area-inset-top, 8px)) 14px 8px 14px;
   background: var(--bg-header);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border-bottom: 1px solid var(--border-subtle);
   flex-shrink: 0;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: space-between;
+  gap: 8px;
   box-sizing: border-box;
   z-index: 90;
   transition: background 0.25s ease, border-color 0.25s ease;
 }
 
-.header-main {
+/* Upper 10%: Dedicated User Profile View Tier */
+.header-tier-upper {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 0;
+  gap: 10px;
+  min-height: 48px;
 }
 
-.user-info {
+.header-profile-box {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 10px;
   cursor: pointer;
-  padding: 2px 4px;
-  border-radius: var(--radius-sm);
-  transition: background 0.18s ease, transform 0.15s ease;
   user-select: none;
   min-width: 0;
+  flex: 1;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  transition: background 0.18s ease;
 }
 
-.user-info:hover {
+.header-profile-box:hover {
   background: rgba(255, 255, 255, 0.05);
 }
 
-.user-info:active {
-  transform: scale(0.97);
+.header-profile-box:active {
+  transform: scale(0.98);
+}
+
+.header-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
 }
 
 .user-avatar-badge {
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.25));
-  border: 1.5px solid rgba(129, 140, 248, 0.4);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3));
+  border: 2px solid rgba(129, 140, 248, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.15rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  font-size: 1.35rem;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
   transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.user-info:hover .user-avatar-badge {
-  transform: scale(1.06) rotate(4deg);
+.header-profile-box:hover .user-avatar-badge {
+  transform: scale(1.08) rotate(4deg);
 }
 
-.user-headings-col {
+.avatar-online-dot {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #10b981;
+  border: 2px solid var(--bg-card);
+  box-shadow: 0 0 6px #10b981;
+}
+
+.header-profile-meta {
   display: flex;
   flex-direction: column;
-  gap: 0px;
+  gap: 2px;
   min-width: 0;
 }
 
+.header-profile-topline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
 .date-badge {
-  font-size: 0.6rem;
+  font-size: 0.64rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -343,82 +370,86 @@ h1, h2, h3, h4, .greeting-text, .hero-title, .tab-heading, .section-title, .moda
   line-height: 1;
 }
 
+.profile-role-tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: rgba(99, 102, 241, 0.14);
+  color: var(--primary);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
 .greeting-text {
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 800;
   color: var(--text-primary);
-  line-height: 1.15;
+  line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 105px;
+  letter-spacing: -0.2px;
 }
 
-/* Center Live Digital Clock Pill */
-.header-clock-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-}
-
-.header-clock-pill {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-full);
-  padding: 4px 10px;
+.header-profile-actions {
   display: flex;
   align-items: center;
   gap: 6px;
-  cursor: pointer;
-  user-select: none;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
-  transition: transform 0.15s ease, border-color 0.2s ease, background 0.2s ease;
+  flex-shrink: 0;
 }
 
-.header-clock-pill:hover {
-  border-color: var(--primary);
-  background: var(--bg-card-hover);
-}
-
-.header-clock-pill:active {
-  transform: scale(0.96);
-}
-
-.header-clock-pill .clock-icon {
-  font-size: 0.8rem;
-  line-height: 1;
-}
-
-.header-clock-pill .clock-display {
-  font-family: var(--font-mono);
-  font-size: 0.86rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.3px;
-  display: flex;
-  align-items: baseline;
-  gap: 3px;
-  white-space: nowrap;
-}
-
-.header-clock-pill .clock-ampm {
-  font-family: var(--font-main);
-  font-size: 0.62rem;
+.level-badge-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(234, 88, 12, 0.18));
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+  font-size: 0.76rem;
   font-weight: 800;
-  color: var(--primary);
-  background: rgba(99, 102, 241, 0.15);
-  padding: 1px 4px;
-  border-radius: 3px;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  line-height: 1.1;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.header-actions {
+.level-badge-btn:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.28), rgba(234, 88, 12, 0.28));
+  transform: translateY(-1px);
+}
+
+.edit-profile-btn {
+  font-size: 0.82rem;
+  opacity: 0.85;
+}
+
+.edit-profile-btn:hover {
+  opacity: 1;
+}
+
+/* Lower 10%: Dedicated Header Features Tier */
+.header-tier-lower {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  min-height: 40px;
+}
+
+body.theme-day .header-tier-lower {
+  border-top-color: rgba(15, 23, 42, 0.06);
+}
+
+.header-feature-actions {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .icon-btn {
