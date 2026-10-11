@@ -258,13 +258,10 @@
             <p class="tab-subheading">Eliminate distractions, customize sessions & flow</p>
           </div>
 
-          <!-- Focus Action Toolbar: Customization & Zen Mode -->
+          <!-- Focus Action Toolbar: Zen Mode -->
           <div class="focus-top-toolbar">
-            <button class="btn btn-secondary btn-sm" id="openCustomFocusModalBtn">
-              ⚙️ Customize Focus Time
-            </button>
-            <button class="btn btn-primary btn-sm" id="enterZenModeBtn">
-              🧘 Deep Zen Mode
+            <button class="btn btn-primary btn-sm" id="enterZenModeBtn" style="width: 100%; justify-content: center;">
+              🧘 Deep Zen Focus Mode
             </button>
           </div>
 
@@ -277,14 +274,19 @@
             <button class="timer-mode-btn" data-mode="customConfig" id="timerCustomModeBtn">⚙️ Custom (<span id="customModeBadgeTime">25m</span>)</button>
           </div>
 
-          <!-- Inline Custom Focus Mode Time Controller (User can customize time) -->
+          <!-- Inline Custom Focus Mode Time Controller (Visible ONLY in Custom Mode) -->
           <div class="custom-focus-inline-card" id="customFocusInlineCard">
             <div class="custom-focus-card-header">
               <div class="custom-focus-title-wrap">
-                <span class="custom-focus-badge">CUSTOM FOCUS TIME</span>
+                <span class="custom-focus-badge">⚙️ CUSTOM MODE ONLY</span>
                 <span class="custom-focus-heading">Customize Session Time</span>
               </div>
-              <span class="custom-focus-current-val" id="focusCustomMinsDisplay">25 mins</span>
+              <div class="custom-focus-header-actions">
+                <span class="custom-focus-current-val" id="focusCustomMinsDisplay">25 mins</span>
+                <button type="button" class="btn btn-secondary btn-xs" id="openCustomFocusModalBtn" title="More Custom Options">
+                  ⚙️ Advanced
+                </button>
+              </div>
             </div>
 
             <!-- Stepper Controller: [-] [ 25 mins ] [+] -->

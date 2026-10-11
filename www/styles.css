@@ -1378,6 +1378,7 @@ body.theme-light .theme-pill-btn:hover {
 
 /* ================= INLINE CUSTOM FOCUS TIME CONTROLLER ================= */
 .custom-focus-inline-card {
+  display: none; /* Shown ONLY when in Custom Mode */
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
@@ -1385,6 +1386,22 @@ body.theme-light .theme-pill-btn:hover {
   margin-bottom: 22px;
   box-shadow: var(--shadow-sm);
   transition: all 0.25s ease;
+}
+
+.custom-focus-inline-card.visible {
+  display: block; /* Visible strictly in Custom Mode */
+  animation: focusCardEntrance 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes focusCardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 body.theme-day .custom-focus-inline-card {
@@ -1418,6 +1435,12 @@ body.theme-day .custom-focus-inline-card {
   font-size: 0.92rem;
   font-weight: 700;
   color: var(--text-primary);
+}
+
+.custom-focus-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .custom-focus-current-val {

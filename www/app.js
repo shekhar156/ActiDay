@@ -2533,6 +2533,15 @@
     });
   }
 
+  function updateCustomFocusCardVisibility(show) {
+    if (!el.focusInlineCard) return;
+    if (show) {
+      el.focusInlineCard.classList.add('visible');
+    } else {
+      el.focusInlineCard.classList.remove('visible');
+    }
+  }
+
   el.timerModeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       playClickSound();
@@ -2540,11 +2549,13 @@
       btn.classList.add('active');
       const mode = btn.getAttribute('data-mode');
       if (mode === 'customConfig') {
-        const customMins = (state.focusConfig && state.focusConfig.focusMins) ? state.focusConfig.focusMins : 45;
+        const customMins = (state.focusConfig && state.focusConfig.focusMins) ? state.focusConfig.focusMins : 25;
         timerDurationSecs = customMins * 60;
+        updateCustomFocusCardVisibility(true);
       } else {
         const durationMins = parseInt(btn.getAttribute('data-duration'), 10) || 25;
         timerDurationSecs = durationMins * 60;
+        updateCustomFocusCardVisibility(false);
       }
       resetTimer();
     });
@@ -2725,6 +2736,9 @@
         else b.classList.remove('active');
       });
     }
+
+    // Ensure customize card is visible when setting custom duration
+    updateCustomFocusCardVisibility(true);
 
     // Update UI if timer is idle
     if (shouldResetTimer && !isTimerRunning) {
@@ -4634,13 +4648,31 @@
       el.ambientAutoSyncToggle.checked = state.ambientSound.autoSync !== false;
     }
 
-    // Initialize custom focus inline controls (customizable focus time)
+    // Initialize custom focus controls values
     const initFocusMins = (state.focusConfig && state.focusConfig.focusMins) ? state.focusConfig.focusMins : 25;
     const initIntention = (state.focusConfig && state.focusConfig.intention) ? state.focusConfig.intention : 'Deep Work & Flow';
-    setCustomFocusDuration(initFocusMins, initIntention, false);
-    if (el.focusInlineIntentionInput) {
-      el.focusInlineIntentionInput.value = (state.focusConfig && state.focusConfig.intention) || '';
+    if (el.focusCustomMinsDisplay) el.focusCustomMinsDisplay.textContent = `${initFocusMins} mins`;
+    if (el.focusInlineMinsInput) el.focusInlineMinsInput.value = initFocusMins;
+    if (el.focusInlineMinsSlider) el.focusInlineMinsSlider.value = initFocusMins;
+    if (el.customModeBadgeTime) el.customModeBadgeTime.textContent = `${initFocusMins}m`;
+    if (el.focusInlineIntentionInput) el.focusInlineIntentionInput.value = initIntention;
+    if (el.focusPresetChips) {
+      el.focusPresetChips.forEach(chip => {
+        const cMins = parseInt(chip.getAttribute('data-mins'), 10);
+        chip.classList.toggle('active', cMins === initFocusMins);
+      });
     }
+
+    // Default to Focus 25m mode: customize session time is shown ONLY in custom mode
+    if (el.timerModeBtns) {
+      el.timerModeBtns.forEach(b => {
+        if (b.getAttribute('data-mode') === 'pomodoro') b.classList.add('active');
+        else b.classList.remove('active');
+      });
+    }
+    timerDurationSecs = 25 * 60;
+    resetTimer();
+    updateCustomFocusCardVisibility(false);
 
     // Handle deep-link hash routing from PWA Manifest Shortcuts
     function handleRouteHash() {
