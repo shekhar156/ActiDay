@@ -1,0 +1,40 @@
+========================================================================
+                      ActiDay - Android App (APK)
+========================================================================
+
+Version: 1.0.0
+Package: com.dailyroutine.app
+File:    ActiDay-v1.0.0.apk (6.1 MB)
+
+------------------------------------------------------------------------
+HOW TO INSTALL ON YOUR ANDROID PHONE:
+------------------------------------------------------------------------
+
+METHOD 1: PHONE TRANSFER (RECOMMENDED)
+1. Transfer "ActiDay-v1.0.0.apk" to your phone via:
+   - USB cable (copy into phone's "Downloads" folder)
+   - WhatsApp / Telegram (send the file to yourself)
+   - Google Drive / Email attachment
+2. On your phone, tap the APK file to open it.
+3. Select "Install".
+   (Note: If prompted with "Install unknown apps", tap Settings and 
+   enable "Allow from this source" for your file manager or browser).
+4. Tap "Open" and enjoy ActiDay!
+
+METHOD 2: VIA ADB / USB DEBUGGING (DEVELOPER MODE)
+If your phone is connected with USB Debugging enabled:
+   adb install -r ActiDay-v1.0.0.apk
+
+------------------------------------------------------------------------
+FEATURES INCLUDED IN THIS BUILD:
+------------------------------------------------------------------------
+- Daily Routine Timeline (Time-blocking & Happening Now hero card)
+- Habit Tracker with active flame streaks & 7-day mini heatmap
+- Priority To-Do Checklist with quick-add & filters
+- 25m Focus Pomodoro Timer with bell gong chime
+- Synthesized Ambient Soundscapes (Rain, Forest, Ocean Waves, White Noise)
+- 4-7-8 Zen Breathwork with visual expanding orb & singing bowls
+- Gamification with XP leveling (Lv. 1 - Lv. 20) & achievement badges
+- Quick Brain-Dump Scratchpad drawer with task converter
+- Offline-First Architecture with Service Worker caching
+========================================================================
