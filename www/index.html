@@ -98,6 +98,10 @@
               <span id="alarmIcon">⏰</span>
               <span class="alarm-badge-dot" id="alarmActiveDot"></span>
             </button>
+            <!-- Theme View Mode Switcher in Header (Day ☀️ / Night 🌙 / Default 🌓) -->
+            <button class="icon-btn theme-header-btn" id="themeHeaderBtn" title="Theme View Mode: Tap to cycle Day ☀️ / Night 🌙 / Default 🌓" aria-label="Toggle Theme View Mode">
+              <span id="headerThemeIcon" class="theme-header-icon">🌓</span>
+            </button>
             <button class="icon-btn" id="settingsBtn" title="App Settings" aria-label="Settings">
               ⚙️
             </button>
@@ -108,7 +112,6 @@
             </button>
             <button class="icon-btn" id="notifToggleBtn" style="display:none;" aria-hidden="true"><span id="notifIcon">🔔</span></button>
             <button class="icon-btn" id="soundToggleBtn" style="display:none;" aria-hidden="true"><span id="soundIcon">🔊</span></button>
-            <button class="icon-btn theme-header-btn" id="themeHeaderBtn" style="display:none;" aria-hidden="true"><span id="headerThemeIcon">🌓</span></button>
           </div>
         </div>
       </header>
@@ -266,71 +269,78 @@
           </div>
 
           <!-- Timer Mode Switcher -->
-          <div class="timer-mode-selector">
-            <button class="timer-mode-btn active" data-mode="pomodoro" data-duration="25">🎯 Focus 25m</button>
-            <button class="timer-mode-btn" data-mode="shortBreak" data-duration="5">☕ Short 5m</button>
-            <button class="timer-mode-btn" data-mode="longBreak" data-duration="15">🌴 Long 15m</button>
-            <button class="timer-mode-btn" data-mode="custom" data-duration="50">⚡ Deep 50m</button>
-            <button class="timer-mode-btn" data-mode="customConfig" id="timerCustomModeBtn">⚙️ Custom (<span id="customModeBadgeTime">25m</span>)</button>
-          </div>
+          <div class="timer-mode-selector" id="timerModeSelector">
+            <button type="button" class="timer-mode-btn active" data-mode="pomodoro" data-duration="25">🎯 Focus 25m</button>
+            <button type="button" class="timer-mode-btn" data-mode="shortBreak" data-duration="5">☕ Short 5m</button>
+            <button type="button" class="timer-mode-btn" data-mode="longBreak" data-duration="15">🌴 Long 15m</button>
+            <button type="button" class="timer-mode-btn" data-mode="custom" data-duration="50">⚡ Deep 50m</button>
 
-          <!-- Inline Custom Focus Mode Time Controller (Visible ONLY in Custom Mode) -->
-          <div class="custom-focus-inline-card" id="customFocusInlineCard">
-            <div class="custom-focus-card-header">
-              <div class="custom-focus-title-wrap">
-                <span class="custom-focus-badge">⚙️ CUSTOM MODE ONLY</span>
-                <span class="custom-focus-heading">Customize Session Time</span>
+            <!-- Custom Mode Item: Custom Time Mode is directly INSIDE this timer-mode-btn -->
+            <div class="timer-mode-btn timer-mode-custom-btn" data-mode="customConfig" id="timerCustomModeBtn" role="button" tabindex="0">
+              <div class="custom-mode-pill-header" id="customModePillHeader">
+                <span class="custom-mode-title">⚙️ Custom</span>
+                <span class="custom-mode-badge" id="customModeBadgeTime">25m</span>
               </div>
-              <div class="custom-focus-header-actions">
-                <span class="custom-focus-current-val" id="focusCustomMinsDisplay">25 mins</span>
-                <button type="button" class="btn btn-secondary btn-xs" id="openCustomFocusModalBtn" title="More Custom Options">
-                  ⚙️ Advanced
-                </button>
+
+              <!-- Custom Time Controller INSIDE timer-mode-btn of Custom -->
+              <div class="custom-focus-inline-card" id="customFocusInlineCard">
+                <div class="custom-focus-card-header">
+                  <div class="custom-focus-title-wrap">
+                    <span class="custom-focus-badge">⚙️ CUSTOM SESSION DURATION</span>
+                    <span class="custom-focus-heading">Customize Time</span>
+                  </div>
+                  <div class="custom-focus-header-actions">
+                    <span class="custom-focus-current-val" id="focusCustomMinsDisplay">25 mins</span>
+                    <button type="button" class="btn btn-secondary btn-xs" id="openCustomFocusModalBtn" title="More Custom Options">
+                      ⚙️ Advanced
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Stepper Controller: [-] [ 25 mins ] [+] -->
+                <div class="custom-stepper-row">
+                  <button type="button" class="stepper-btn minus-btn" id="focusMinsMinusBtn" title="Decrease time by 5 minutes" aria-label="Decrease minutes">
+                    <span>−</span>
+                  </button>
+                  <div class="stepper-input-wrap">
+                    <input type="number" id="focusInlineMinsInput" min="1" max="180" value="25" class="stepper-num-input" aria-label="Custom Focus Minutes">
+                    <span class="stepper-unit">mins</span>
+                  </div>
+                  <button type="button" class="stepper-btn plus-btn" id="focusMinsPlusBtn" title="Increase time by 5 minutes" aria-label="Increase minutes">
+                    <span>+</span>
+                  </button>
+                </div>
+
+                <!-- Range Slider for smooth continuous time dragging -->
+                <div class="custom-slider-wrap">
+                  <input type="range" id="focusInlineMinsSlider" min="1" max="180" value="25" class="custom-focus-range-slider" aria-label="Drag to set custom focus minutes">
+                  <div class="slider-marks-row">
+                    <span>1m</span>
+                    <span>25m</span>
+                    <span>45m</span>
+                    <span>60m</span>
+                    <span>90m</span>
+                    <span>180m</span>
+                  </div>
+                </div>
+
+                <!-- Quick Duration Preset Chips -->
+                <div class="quick-preset-chips" id="focusPresetChips">
+                  <button type="button" class="preset-chip" data-mins="15">15m</button>
+                  <button type="button" class="preset-chip active" data-mins="25">25m</button>
+                  <button type="button" class="preset-chip" data-mins="35">35m</button>
+                  <button type="button" class="preset-chip" data-mins="45">45m</button>
+                  <button type="button" class="preset-chip" data-mins="60">60m</button>
+                  <button type="button" class="preset-chip" data-mins="90">90m</button>
+                  <button type="button" class="preset-chip" data-mins="120">120m</button>
+                </div>
+
+                <!-- Focus Session Goal / Intention Input -->
+                <div class="focus-intention-input-row">
+                  <span class="intention-icon">🎯</span>
+                  <input type="text" id="focusInlineIntentionInput" placeholder="Session goal (e.g. Android Feature, Coding, Study)..." maxlength="60" class="focus-intention-input">
+                </div>
               </div>
-            </div>
-
-            <!-- Stepper Controller: [-] [ 25 mins ] [+] -->
-            <div class="custom-stepper-row">
-              <button type="button" class="stepper-btn minus-btn" id="focusMinsMinusBtn" title="Decrease time by 5 minutes" aria-label="Decrease minutes">
-                <span>−</span>
-              </button>
-              <div class="stepper-input-wrap">
-                <input type="number" id="focusInlineMinsInput" min="1" max="180" value="25" class="stepper-num-input" aria-label="Custom Focus Minutes">
-                <span class="stepper-unit">mins</span>
-              </div>
-              <button type="button" class="stepper-btn plus-btn" id="focusMinsPlusBtn" title="Increase time by 5 minutes" aria-label="Increase minutes">
-                <span>+</span>
-              </button>
-            </div>
-
-            <!-- Range Slider for smooth continuous time dragging -->
-            <div class="custom-slider-wrap">
-              <input type="range" id="focusInlineMinsSlider" min="1" max="180" value="25" class="custom-focus-range-slider" aria-label="Drag to set custom focus minutes">
-              <div class="slider-marks-row">
-                <span>1m</span>
-                <span>25m</span>
-                <span>45m</span>
-                <span>60m</span>
-                <span>90m</span>
-                <span>180m</span>
-              </div>
-            </div>
-
-            <!-- Quick Duration Preset Chips -->
-            <div class="quick-preset-chips" id="focusPresetChips">
-              <button type="button" class="preset-chip" data-mins="15">15m</button>
-              <button type="button" class="preset-chip active" data-mins="25">25m</button>
-              <button type="button" class="preset-chip" data-mins="35">35m</button>
-              <button type="button" class="preset-chip" data-mins="45">45m</button>
-              <button type="button" class="preset-chip" data-mins="60">60m</button>
-              <button type="button" class="preset-chip" data-mins="90">90m</button>
-              <button type="button" class="preset-chip" data-mins="120">120m</button>
-            </div>
-
-            <!-- Focus Session Goal / Intention Input -->
-            <div class="focus-intention-input-row">
-              <span class="intention-icon">🎯</span>
-              <input type="text" id="focusInlineIntentionInput" placeholder="Session goal (e.g. Android Feature, Coding, Study)..." maxlength="60" class="focus-intention-input">
             </div>
           </div>
 
@@ -588,13 +598,6 @@
         <button class="nav-tab" data-tab="tabInsights" id="navInsights">
           <span class="nav-icon">📊</span>
           <span class="nav-label">Insights</span>
-        </button>
-
-        <!-- View Mode: ONLY a Logo Switch at the Bottom (Tap to toggle Day ☀️ / Night 🌙 / Default 🌓) -->
-        <button class="bottom-theme-logo-btn" id="bottomThemeLogoBtn" title="Theme View Mode (Tap to switch Day / Night / Default)" aria-label="Toggle Theme View Mode">
-          <span class="bottom-theme-logo-disc" id="bottomThemeLogoDisc">
-            <span class="bottom-theme-logo-icon" id="bottomThemeLogoIcon">🌓</span>
-          </span>
         </button>
       </nav>
 

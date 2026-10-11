@@ -470,6 +470,31 @@ h1, h2, h3, h4, .greeting-text, .hero-title, .tab-heading, .section-title, .moda
   50% { transform: scale(1.15) rotate(4deg); }
 }
 
+/* Theme View Mode Button in Header */
+.theme-header-btn {
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  font-size: 0.95rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.theme-header-btn:hover {
+  background: rgba(99, 102, 241, 0.24);
+  border-color: var(--primary);
+  transform: translateY(-1px) scale(1.06);
+}
+
+.theme-header-btn.rotate-anim .theme-header-icon {
+  display: inline-block;
+  animation: themeHeaderSpin 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes themeHeaderSpin {
+  0% { transform: rotate(0deg) scale(0.85); }
+  50% { transform: rotate(180deg) scale(1.2); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
 /* Routine Scroll Ribbon (inside Tab 1, scrolls naturally) */
 .routine-scroll-ribbon {
   margin-bottom: 12px;
@@ -1352,8 +1377,10 @@ body.theme-light .theme-pill-btn:hover {
 .timer-mode-selector {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 6px;
   margin-bottom: 24px;
+  flex-wrap: wrap;
 }
 
 .timer-mode-btn {
@@ -1363,10 +1390,14 @@ body.theme-light .theme-pill-btn:hover {
   color: var(--text-secondary);
   font-size: 0.78rem;
   font-weight: 700;
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: var(--radius-full);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 .timer-mode-btn.active {
@@ -1376,27 +1407,106 @@ body.theme-light .theme-pill-btn:hover {
   box-shadow: 0 4px 12px var(--primary-glow);
 }
 
-/* ================= INLINE CUSTOM FOCUS TIME CONTROLLER ================= */
-.custom-focus-inline-card {
-  display: none; /* Shown ONLY when in Custom Mode */
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
+/* Custom Mode Item: Contains the Custom Time Mode directly INSIDE */
+.timer-mode-btn.timer-mode-custom-btn {
+  display: inline-flex;
+  flex-direction: column;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left;
+}
+
+.timer-mode-btn.timer-mode-custom-btn:not(.active) {
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+}
+
+.timer-mode-btn.timer-mode-custom-btn:not(.active) .custom-focus-inline-card {
+  display: none !important;
+}
+
+.custom-mode-pill-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.custom-mode-title {
+  font-weight: 700;
+}
+
+.custom-mode-badge {
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+/* When Custom Mode is Active: Expands into full custom controller directly inside the button */
+.timer-mode-btn.timer-mode-custom-btn.active {
+  width: 100%;
   border-radius: var(--radius-lg);
   padding: 14px 16px;
-  margin-bottom: 22px;
-  box-shadow: var(--shadow-sm);
+  background: var(--bg-card);
+  border: 1.5px solid var(--primary);
+  box-shadow: 0 4px 20px var(--primary-glow);
+  cursor: default;
+}
+
+body.theme-day .timer-mode-btn.timer-mode-custom-btn.active {
+  background: #ffffff;
+  border-color: var(--primary);
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.12);
+}
+
+.timer-mode-btn.timer-mode-custom-btn.active .custom-mode-pill-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  cursor: pointer;
+}
+
+.timer-mode-btn.timer-mode-custom-btn.active .custom-mode-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: 0.4px;
+}
+
+.timer-mode-btn.timer-mode-custom-btn.active .custom-mode-badge {
+  font-family: var(--font-display);
+  font-size: 0.84rem;
+  font-weight: 800;
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--primary);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+/* ================= INLINE CUSTOM FOCUS TIME CONTROLLER INSIDE CUSTOM BUTTON ================= */
+.custom-focus-inline-card {
+  display: none; /* Shown ONLY when in Custom Mode */
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
   transition: all 0.25s ease;
 }
 
+.timer-mode-btn.timer-mode-custom-btn.active .custom-focus-inline-card,
 .custom-focus-inline-card.visible {
-  display: block; /* Visible strictly in Custom Mode */
+  display: block !important;
   animation: focusCardEntrance 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes focusCardEntrance {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-6px);
   }
   to {
     opacity: 1;

@@ -2534,6 +2534,13 @@
   }
 
   function updateCustomFocusCardVisibility(show) {
+    if (el.timerCustomModeBtn) {
+      if (show) {
+        el.timerCustomModeBtn.classList.add('active');
+      } else {
+        el.timerCustomModeBtn.classList.remove('active');
+      }
+    }
     if (!el.focusInlineCard) return;
     if (show) {
       el.focusInlineCard.classList.add('visible');
@@ -2543,7 +2550,11 @@
   }
 
   el.timerModeBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      // If click originated from inside the custom inline card, don't re-trigger mode click
+      if (e.target.closest('#customFocusInlineCard')) {
+        return;
+      }
       playClickSound();
       el.timerModeBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
@@ -3576,12 +3587,23 @@
     el.themeHeaderBtn.addEventListener('click', () => {
       playClickSound();
       triggerVibrate([35]);
+      el.themeHeaderBtn.classList.remove('rotate-anim');
+      void el.themeHeaderBtn.offsetWidth;
+      el.themeHeaderBtn.classList.add('rotate-anim');
+      setTimeout(() => {
+        if (el.themeHeaderBtn) el.themeHeaderBtn.classList.remove('rotate-anim');
+      }, 450);
+
       const current = (state.settings && state.settings.themeMode) || 'default';
       const order = ['day', 'night', 'default'];
       const nextIndex = (order.indexOf(current) + 1) % order.length;
       const nextMode = order[nextIndex];
       applyThemeMode(nextMode);
-      const names = { day: '☀️ Day Mode active', night: '🌙 Night Mode active', default: '🌓 System Default active' };
+      const names = {
+        day: '☀️ Day Mode active (Luminous & Crisp)',
+        night: '🌙 Night Mode active (Deep Dark OLED)',
+        default: '🌓 System Default active (Adaptive)'
+      };
       showToast(names[nextMode]);
     });
   }
