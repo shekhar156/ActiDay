@@ -47,9 +47,12 @@
       <!-- App Header Bar -->
       <header class="app-header">
         <div class="header-main">
-          <div class="user-info">
-            <span class="date-badge" id="currentDateBadge">Today, Oct 8</span>
-            <h1 class="greeting-text" id="greetingHeading">Hello, Achiever ✨</h1>
+          <div class="user-info" id="headerProfileTrigger" title="Tap to customize User Profile & Name" role="button" tabindex="0">
+            <div class="user-avatar-badge" id="headerUserAvatar">🚀</div>
+            <div class="user-headings-col">
+              <span class="date-badge" id="currentDateBadge">Today, Oct 8</span>
+              <h1 class="greeting-text" id="greetingHeading">Hello, Mahab ✨</h1>
+            </div>
           </div>
           <div class="header-actions">
             <button class="icon-btn level-badge-btn" id="headerLevelBtn" title="Productivity Level & Badges (XP)">
@@ -619,69 +622,205 @@
 
   <!-- 3. Settings & Preferences Modal -->
   <div class="modal-backdrop" id="settingsModal">
-    <div class="modal-sheet">
+    <div class="modal-sheet modal-sheet-lg">
       <div class="modal-header">
-        <h3>App Settings & Themes</h3>
+        <div class="modal-title-group">
+          <span class="modal-pill">PREFERENCES & PROFILE</span>
+          <h3>⚙️ App Settings</h3>
+        </div>
         <button class="modal-close-btn" id="closeSettingsModalBtn">&times;</button>
       </div>
+
       <div class="settings-content">
-        <div class="setting-row">
-          <div>
-            <strong>Theme Mode</strong>
-            <p class="setting-caption">Choose color theme</p>
+        <!-- 1. USER PROFILE SECTION -->
+        <div class="settings-section-card">
+          <div class="settings-section-header">
+            <span class="section-icon">👤</span>
+            <div>
+              <h4 class="section-title">User Profile & Greeting</h4>
+              <p class="section-subtitle">Set your name and avatar to personalize the app</p>
+            </div>
           </div>
-          <select id="themeSelect" aria-label="Theme Mode">
-            <option value="theme-dark">Midnight Dark (AMOLED)</option>
-            <option value="theme-light">Fresh Light</option>
-            <option value="theme-neon">Cyber Glow</option>
-          </select>
+
+          <!-- Live Profile Preview Card -->
+          <div class="profile-preview-card">
+            <div class="profile-preview-avatar" id="profilePreviewAvatar">🚀</div>
+            <div class="profile-preview-info">
+              <span class="profile-preview-greeting">Personal Greeting</span>
+              <h4 class="profile-preview-name" id="profilePreviewName">Mahab</h4>
+              <span class="profile-preview-title" id="profilePreviewTitle">Consistency Achiever</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="profileNameInput">Your Name (Used in Greetings) *</label>
+              <input type="text" id="profileNameInput" placeholder="e.g. Mahab" maxlength="30" value="Mahab">
+            </div>
+            <div class="form-group flex-1">
+              <label for="profileTitleInput">Focus Title / Goal</label>
+              <input type="text" id="profileTitleInput" placeholder="e.g. Software Engineer" maxlength="40" value="Consistency Achiever">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Choose Avatar Emoji</label>
+            <div class="avatar-picker-grid" id="avatarPickerGrid">
+              <button type="button" class="avatar-option-btn active" data-avatar="🚀">🚀</button>
+              <button type="button" class="avatar-option-btn" data-avatar="💻">💻</button>
+              <button type="button" class="avatar-option-btn" data-avatar="⚡">⚡</button>
+              <button type="button" class="avatar-option-btn" data-avatar="🦁">🦁</button>
+              <button type="button" class="avatar-option-btn" data-avatar="🧘">🧘</button>
+              <button type="button" class="avatar-option-btn" data-avatar="👑">👑</button>
+              <button type="button" class="avatar-option-btn" data-avatar="🎯">🎯</button>
+              <button type="button" class="avatar-option-btn" data-avatar="🥑">🥑</button>
+            </div>
+          </div>
         </div>
 
-        <div class="setting-row">
-          <div>
-            <strong>Clock Display Format</strong>
-            <p class="setting-caption">Switch 12-Hour (AM/PM) or 24-Hour counter</p>
+        <!-- 2. RINGTONE & NOTIFICATION SOUNDS SECTION -->
+        <div class="settings-section-card">
+          <div class="settings-section-header">
+            <span class="section-icon">🔊</span>
+            <div>
+              <h4 class="section-title">Audio, Ringtones & Sounds</h4>
+              <p class="section-subtitle">Select procedural ringtones and notification alerts</p>
+            </div>
           </div>
-          <select id="timeFormatSelect" aria-label="Clock Display Format">
-            <option value="12h" selected>12-Hour (AM / PM)</option>
-            <option value="24h">24-Hour (Military / Standard)</option>
-          </select>
+
+          <div class="setting-row">
+            <div>
+              <strong>Alarm Default Ringtone</strong>
+              <p class="setting-caption">Sound played during alarm wakeups</p>
+            </div>
+            <div class="setting-ctrl-row">
+              <select id="alarmRingtoneSelect" aria-label="Default Alarm Ringtone">
+                <option value="digital">⏰ Digital Alarm Beep</option>
+                <option value="zen">🧘 Zen Rising Bells</option>
+                <option value="wakeup">⚡ Energetic Wakeup</option>
+                <option value="radar">📡 Radar Pulse Alert</option>
+                <option value="gentle">🔔 Gentle Wind Chime</option>
+              </select>
+              <button type="button" class="btn btn-ghost btn-sm" id="testAlarmRingtoneBtn" title="Test Ringtone">🔊 Preview</button>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <strong>Notification Sound</strong>
+              <p class="setting-caption">Chime for timer completion & milestone alerts</p>
+            </div>
+            <div class="setting-ctrl-row">
+              <select id="notifSoundSelect" aria-label="Notification Sound">
+                <option value="chime">🎶 Upward Chime Arpeggio</option>
+                <option value="crystal">💎 Crystal Marimba</option>
+                <option value="bubble">🫧 Water Drop / Bubble</option>
+                <option value="bell">🔔 Resonant Bell Ping</option>
+                <option value="radar">📡 Subtle Radar Sonar</option>
+              </select>
+              <button type="button" class="btn btn-ghost btn-sm" id="testNotifSoundBtn" title="Test Notification Sound">🔔 Preview</button>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <strong>Master Audio Volume</strong>
+              <p class="setting-caption">Volume level for all sounds: <span id="settingsSoundVolumeVal">80%</span></p>
+            </div>
+            <div class="setting-slider-wrap">
+              <input type="range" id="settingsSoundVolumeSlider" min="0" max="100" value="80" class="custom-range-slider">
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <strong>Haptic Vibration</strong>
+              <p class="setting-caption">Haptic feedback on taps, timers, and alarms</p>
+            </div>
+            <div class="setting-ctrl-row">
+              <label class="switch">
+                <input type="checkbox" id="settingsVibrateToggle" checked>
+                <span class="slider"></span>
+              </label>
+              <button class="btn btn-ghost btn-sm" id="testVibrateBtn">📳 Test</button>
+            </div>
+          </div>
         </div>
 
-        <div class="setting-row">
-          <div>
-            <strong>Sound Effects (Web Audio)</strong>
-            <p class="setting-caption">Play audio chimes on completion</p>
+        <!-- 3. SYSTEM NOTIFICATIONS & PERMISSIONS SECTION -->
+        <div class="settings-section-card">
+          <div class="settings-section-header">
+            <span class="section-icon">🔔</span>
+            <div>
+              <h4 class="section-title">Notification Permission</h4>
+              <p class="section-subtitle">Real-time alerts for routines, focus, and alarms</p>
+            </div>
           </div>
-          <button class="btn btn-secondary btn-sm" id="testSoundBtn">🔊 Test Chime</button>
+
+          <div class="setting-row">
+            <div>
+              <strong>Status: <span class="badge-pill" id="settingsNotifStatusBadge">Checking...</span></strong>
+              <p class="setting-caption">Push alerts for focus sessions & alarm schedules</p>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" id="settingsReqNotifBtn">
+              🔔 Enable Notifications
+            </button>
+          </div>
         </div>
 
-        <div class="setting-row">
-          <div>
-            <strong>Haptic Vibration</strong>
-            <p class="setting-caption">Vibration on Android devices</p>
+        <!-- 4. DISPLAY, CLOCK & THEMES -->
+        <div class="settings-section-card">
+          <div class="settings-section-header">
+            <span class="section-icon">🎨</span>
+            <div>
+              <h4 class="section-title">Display & Appearance</h4>
+              <p class="section-subtitle">Color themes and clock preferences</p>
+            </div>
           </div>
-          <button class="btn btn-secondary btn-sm" id="testVibrateBtn">📳 Test Vibrate</button>
-        </div>
 
-        <div class="setting-row">
-          <div>
-            <strong>Android Desktop Bezel</strong>
-            <p class="setting-caption">Toggle simulated mobile frame</p>
+          <div class="setting-row">
+            <div>
+              <strong>Theme Mode</strong>
+              <p class="setting-caption">Choose color theme</p>
+            </div>
+            <select id="themeSelect" aria-label="Theme Mode">
+              <option value="theme-dark">Midnight Dark (AMOLED)</option>
+              <option value="theme-light">Fresh Light</option>
+              <option value="theme-neon">Cyber Glow</option>
+            </select>
           </div>
-          <button class="btn btn-secondary btn-sm" id="toggleDeviceFrameBtn">Toggle Frame</button>
-        </div>
 
-        <div class="setting-row">
-          <div>
-            <strong>Capacitor Android Build</strong>
-            <p class="setting-caption">Ready for APK packaging</p>
+          <div class="setting-row">
+            <div>
+              <strong>Clock Display Format</strong>
+              <p class="setting-caption">Switch 12-Hour (AM/PM) or 24-Hour counter</p>
+            </div>
+            <select id="timeFormatSelect" aria-label="Clock Display Format">
+              <option value="12h" selected>12-Hour (AM / PM)</option>
+              <option value="24h">24-Hour (Military / Standard)</option>
+            </select>
           </div>
-          <span class="badge-success">Ready (v1.0.0)</span>
+
+          <div class="setting-row">
+            <div>
+              <strong>Simulated Mobile Frame</strong>
+              <p class="setting-caption">Toggle mobile bezel on desktop preview</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="toggleDeviceFrameBtn">Toggle Frame</button>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <strong>Capacitor Android Build</strong>
+              <p class="setting-caption">Ready for APK packaging</p>
+            </div>
+            <span class="badge-pill badge-success">Ready (v1.0.0)</span>
+          </div>
         </div>
       </div>
+
       <div class="modal-actions">
-        <button type="button" class="btn btn-primary btn-block" id="doneSettingsModalBtn">Done</button>
+        <button type="button" class="btn btn-primary btn-block" id="doneSettingsModalBtn">Done &amp; Apply</button>
       </div>
     </div>
   </div>

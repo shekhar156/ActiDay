@@ -12,11 +12,19 @@
   const STORAGE_KEY = 'daily_routine_app_data_v2';
 
   const DEFAULT_DATA = {
+    profile: {
+      name: 'Mahab',
+      avatar: '🚀',
+      title: 'Consistency Achiever'
+    },
     settings: {
       theme: 'theme-dark',
       soundEnabled: true,
+      soundVolume: 0.8,
       vibrationEnabled: true,
       alarmBellEnabled: true,
+      alarmRingtone: 'digital',
+      notificationSound: 'chime',
       metronomeEnabled: false,
       showDeviceFrame: true,
       timeFormat: '12h'
@@ -237,8 +245,14 @@
       if (saved) {
         const parsed = JSON.parse(saved);
         const merged = { ...DEFAULT_DATA, ...parsed };
+        if (!merged.profile) merged.profile = JSON.parse(JSON.stringify(DEFAULT_DATA.profile));
+        if (!merged.profile.name) merged.profile.name = 'Mahab';
+        if (!merged.profile.avatar) merged.profile.avatar = '🚀';
         if (!merged.settings) merged.settings = JSON.parse(JSON.stringify(DEFAULT_DATA.settings));
         if (!merged.settings.timeFormat) merged.settings.timeFormat = '12h';
+        if (!merged.settings.alarmRingtone) merged.settings.alarmRingtone = 'digital';
+        if (!merged.settings.notificationSound) merged.settings.notificationSound = 'chime';
+        if (typeof merged.settings.soundVolume !== 'number') merged.settings.soundVolume = 0.8;
         if (!merged.gamification) merged.gamification = JSON.parse(JSON.stringify(DEFAULT_DATA.gamification));
         if (!merged.ambientSound) merged.ambientSound = JSON.parse(JSON.stringify(DEFAULT_DATA.ambientSound));
         if (!merged.focusConfig) merged.focusConfig = JSON.parse(JSON.stringify(DEFAULT_DATA.focusConfig));
@@ -323,28 +337,89 @@
     } catch (e) {}
   }
 
-  // Cheerful victory arpeggio
-  function playCompletionSound() {
+  // Notification procedural audio chimes (chime, crystal, bubble, bell, radar)
+  function playNotificationSound(soundType) {
     if (!state.settings.soundEnabled) return;
     try {
       initAudio();
       if (!audioCtx) return;
-      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
       const start = audioCtx.currentTime;
-      notes.forEach((freq, idx) => {
+      const type = soundType || (state.settings ? state.settings.notificationSound : 'chime') || 'chime';
+      const masterVol = typeof state.settings.soundVolume === 'number' ? state.settings.soundVolume : 0.8;
+
+      if (type === 'crystal') {
+        [1046.5, 1567.98].forEach((freq, i) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, start + i * 0.08);
+          gain.gain.setValueAtTime(0.25 * masterVol, start + i * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + i * 0.08 + 0.35);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(start + i * 0.08);
+          osc.stop(start + i * 0.08 + 0.36);
+        });
+      } else if (type === 'bubble') {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sine';
-        osc.frequency.value = freq;
-        const noteStart = start + idx * 0.08;
-        gain.gain.setValueAtTime(0.16, noteStart);
-        gain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.18);
+        osc.frequency.setValueAtTime(340, start);
+        osc.frequency.exponentialRampToValueAtTime(880, start + 0.09);
+        gain.gain.setValueAtTime(0.28 * masterVol, start);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.12);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
-        osc.start(noteStart);
-        osc.stop(noteStart + 0.18);
-      });
+        osc.start(start);
+        osc.stop(start + 0.13);
+      } else if (type === 'bell') {
+        [880, 1760].forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, start);
+          gain.gain.setValueAtTime((0.24 / (idx + 1)) * masterVol, start);
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.6);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(start);
+          osc.stop(start + 0.62);
+        });
+      } else if (type === 'radar') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1400, start);
+        osc.frequency.exponentialRampToValueAtTime(600, start + 0.14);
+        gain.gain.setValueAtTime(0.26 * masterVol, start);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.15);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(start);
+        osc.stop(start + 0.16);
+      } else {
+        // Default: Cheerful upward arpeggio chime
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          const noteStart = start + idx * 0.07;
+          gain.gain.setValueAtTime(0.18 * masterVol, noteStart);
+          gain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.18);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(noteStart);
+          osc.stop(noteStart + 0.19);
+        });
+      }
     } catch (e) {}
+  }
+
+  // Cheerful victory arpeggio
+  function playCompletionSound() {
+    playNotificationSound('chime');
   }
 
   // Customizable Finish Sounds (Tibetan Singing Bowl, Digital Alarm, Crystal Marimba, 8-Bit Fanfare, Radar Pulse)
@@ -445,16 +520,18 @@
   let isAlarmRinging = false;
   let activeAlarmVibrateInterval = null;
 
-  function startAlarmSound(soundType = 'digital') {
+  function startAlarmSound(soundType) {
     initAudio();
     stopAlarmSound();
     isAlarmRinging = true;
+    const type = soundType || (state.settings ? state.settings.alarmRingtone : 'digital') || 'digital';
+    const masterVol = typeof state.settings.soundVolume === 'number' ? state.settings.soundVolume : 0.8;
 
     function playBurst() {
       if (!isAlarmRinging || !audioCtx) return;
       try {
         const now = audioCtx.currentTime;
-        if (soundType === 'zen') {
+        if (type === 'zen') {
           // Zen rising bells
           const notes = [440, 554.37, 659.25, 880];
           notes.forEach((freq, idx) => {
@@ -462,14 +539,14 @@
             const gain = audioCtx.createGain();
             osc.type = 'sine';
             osc.frequency.setValueAtTime(freq, now + idx * 0.18);
-            gain.gain.setValueAtTime(0.28, now + idx * 0.18);
+            gain.gain.setValueAtTime(0.28 * masterVol, now + idx * 0.18);
             gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.18 + 0.8);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start(now + idx * 0.18);
             osc.stop(now + idx * 0.18 + 0.85);
           });
-        } else if (soundType === 'wakeup') {
+        } else if (type === 'wakeup') {
           // Energetic Wakeup fanfare
           const notes = [587.33, 739.99, 880, 1174.66];
           notes.forEach((freq, idx) => {
@@ -477,26 +554,41 @@
             const gain = audioCtx.createGain();
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(freq, now + idx * 0.12);
-            gain.gain.setValueAtTime(0.2, now + idx * 0.12);
+            gain.gain.setValueAtTime(0.2 * masterVol, now + idx * 0.12);
             gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.12 + 0.25);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start(now + idx * 0.12);
             osc.stop(now + idx * 0.12 + 0.26);
           });
-        } else if (soundType === 'radar') {
+        } else if (type === 'radar') {
           [0, 0.22].forEach(offset => {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'sine';
             osc.frequency.setValueAtTime(1500, now + offset);
             osc.frequency.exponentialRampToValueAtTime(600, now + offset + 0.2);
-            gain.gain.setValueAtTime(0.35, now + offset);
+            gain.gain.setValueAtTime(0.35 * masterVol, now + offset);
             gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.2);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start(now + offset);
             osc.stop(now + offset + 0.22);
+          });
+        } else if (type === 'gentle') {
+          // Gentle resonant harmonic wind chime / gong
+          const freqs = [523.25, 659.25, 783.99, 1046.5];
+          freqs.forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+            gain.gain.setValueAtTime(0.24 * masterVol, now + idx * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.12 + 1.1);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + idx * 0.12);
+            osc.stop(now + idx * 0.12 + 1.15);
           });
         } else {
           // Classic Digital Alarm Beep (Loud repeating pulse)
@@ -505,7 +597,7 @@
             const gain = audioCtx.createGain();
             osc.type = 'square';
             osc.frequency.setValueAtTime(1200, now + offset);
-            gain.gain.setValueAtTime(0.3, now + offset);
+            gain.gain.setValueAtTime(0.3 * masterVol, now + offset);
             gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.08);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
@@ -517,7 +609,7 @@
     }
 
     playBurst();
-    activeAlarmInterval = setInterval(playBurst, soundType === 'zen' ? 1800 : 1200);
+    activeAlarmInterval = setInterval(playBurst, type === 'zen' || type === 'gentle' ? 1800 : 1200);
 
     // Continuous haptic vibration pattern
     if ('vibrate' in navigator && state.settings.vibrationEnabled) {
@@ -1012,6 +1104,8 @@
   // ==========================================================================
   const el = {
     // Header & Status
+    headerProfileTrigger: document.getElementById('headerProfileTrigger'),
+    headerUserAvatar: document.getElementById('headerUserAvatar'),
     statusClock: document.getElementById('statusClock'),
     liveDigitalClock: document.getElementById('liveDigitalClock'),
     digitalClockCard: document.getElementById('digitalClockCard'),
@@ -1126,6 +1220,25 @@
     testSoundBtn: document.getElementById('testSoundBtn'),
     testVibrateBtn: document.getElementById('testVibrateBtn'),
     toggleDeviceFrameBtn: document.getElementById('toggleDeviceFrameBtn'),
+
+    // User Profile Elements
+    profilePreviewAvatar: document.getElementById('profilePreviewAvatar'),
+    profilePreviewName: document.getElementById('profilePreviewName'),
+    profilePreviewTitle: document.getElementById('profilePreviewTitle'),
+    profileNameInput: document.getElementById('profileNameInput'),
+    profileTitleInput: document.getElementById('profileTitleInput'),
+    avatarOptionBtns: document.querySelectorAll('.avatar-option-btn'),
+
+    // Sound & Notification Settings Elements
+    alarmRingtoneSelect: document.getElementById('alarmRingtoneSelect'),
+    testAlarmRingtoneBtn: document.getElementById('testAlarmRingtoneBtn'),
+    notifSoundSelect: document.getElementById('notifSoundSelect'),
+    testNotifSoundBtn: document.getElementById('testNotifSoundBtn'),
+    settingsSoundVolumeSlider: document.getElementById('settingsSoundVolumeSlider'),
+    settingsSoundVolumeVal: document.getElementById('settingsSoundVolumeVal'),
+    settingsVibrateToggle: document.getElementById('settingsVibrateToggle'),
+    settingsNotifStatusBadge: document.getElementById('settingsNotifStatusBadge'),
+    settingsReqNotifBtn: document.getElementById('settingsReqNotifBtn'),
 
     // Gamification & Header Level
     headerLevelBtn: document.getElementById('headerLevelBtn'),
@@ -1300,13 +1413,14 @@
       el.currentDateBadge.textContent = `${dayName}, ${monthName} ${dateNum}`;
     }
 
-    // Dynamic greeting
+    // Dynamic personalized greeting calling user by name
     const h = now.getHours();
-    let greeting = 'Hello, Achiever ✨';
-    if (h >= 5 && h < 12) greeting = 'Good Morning ☀️';
-    else if (h >= 12 && h < 17) greeting = 'Good Afternoon 🌤️';
-    else if (h >= 17 && h < 21) greeting = 'Good Evening 🌆';
-    else greeting = 'Night Wind Down 🌙';
+    const userName = (state.profile && state.profile.name && state.profile.name.trim()) ? state.profile.name.trim() : 'Achiever';
+    let greeting = `Hello, ${userName} ✨`;
+    if (h >= 5 && h < 12) greeting = `Good Morning, ${userName} ☀️`;
+    else if (h >= 12 && h < 17) greeting = `Good Afternoon, ${userName} 🌤️`;
+    else if (h >= 17 && h < 21) greeting = `Good Evening, ${userName} 🌆`;
+    else greeting = `Night Wind Down, ${userName} 🌙`;
     if (el.greetingHeading) el.greetingHeading.textContent = greeting;
 
     // Update active routine analysis
@@ -2916,10 +3030,200 @@
     });
   }
 
-  if (el.testSoundBtn) {
-    el.testSoundBtn.addEventListener('click', () => {
-      playCompletionSound();
-      showToast('Playing completion chime');
+  // ==========================================================================
+  // 10. USER PROFILE & ADVANCED SETTINGS CONTROLLER
+  // ==========================================================================
+  function renderProfileUI() {
+    if (!state.profile) {
+      state.profile = { name: 'Mahab', avatar: '🚀', title: 'Consistency Achiever' };
+    }
+    const prof = state.profile;
+    const name = prof.name || 'Mahab';
+    const avatar = prof.avatar || '🚀';
+    const title = prof.title || 'Consistency Achiever';
+
+    if (el.headerUserAvatar) el.headerUserAvatar.textContent = avatar;
+    if (el.profilePreviewAvatar) el.profilePreviewAvatar.textContent = avatar;
+    if (el.profilePreviewName) el.profilePreviewName.textContent = name;
+    if (el.profilePreviewTitle) el.profilePreviewTitle.textContent = title;
+    if (el.profileNameInput && document.activeElement !== el.profileNameInput) el.profileNameInput.value = name;
+    if (el.profileTitleInput && document.activeElement !== el.profileTitleInput) el.profileTitleInput.value = title;
+
+    if (el.avatarOptionBtns) {
+      el.avatarOptionBtns.forEach(btn => {
+        if (btn.getAttribute('data-avatar') === avatar) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+    }
+
+    updateClock();
+  }
+
+  // Header profile quick click -> open settings
+  if (el.headerProfileTrigger) {
+    el.headerProfileTrigger.addEventListener('click', () => {
+      playClickSound();
+      if (el.settingsModal) el.settingsModal.classList.add('open');
+      if (el.profileNameInput) {
+        setTimeout(() => el.profileNameInput.focus(), 250);
+      }
+    });
+  }
+
+  // Live profile input listeners
+  if (el.profileNameInput) {
+    el.profileNameInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim() || 'Achiever';
+      state.profile.name = val;
+      if (el.profilePreviewName) el.profilePreviewName.textContent = val;
+      saveState();
+      updateClock();
+    });
+  }
+
+  if (el.profileTitleInput) {
+    el.profileTitleInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim() || 'Daily Consistency';
+      state.profile.title = val;
+      if (el.profilePreviewTitle) el.profilePreviewTitle.textContent = val;
+      saveState();
+    });
+  }
+
+  if (el.avatarOptionBtns) {
+    el.avatarOptionBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        playClickSound();
+        const av = btn.getAttribute('data-avatar');
+        state.profile.avatar = av;
+        saveState();
+        renderProfileUI();
+        showToast(`Profile avatar updated: ${av}`);
+      });
+    });
+  }
+
+  // Ringtone & Audio Settings Listeners
+  if (el.alarmRingtoneSelect) {
+    el.alarmRingtoneSelect.value = (state.settings && state.settings.alarmRingtone) || 'digital';
+    el.alarmRingtoneSelect.addEventListener('change', (e) => {
+      state.settings.alarmRingtone = e.target.value;
+      saveState();
+      playClickSound();
+      showToast(`Default alarm ringtone set to ${e.target.selectedOptions[0].text}`);
+    });
+  }
+
+  if (el.testAlarmRingtoneBtn) {
+    el.testAlarmRingtoneBtn.addEventListener('click', () => {
+      const snd = el.alarmRingtoneSelect ? el.alarmRingtoneSelect.value : (state.settings.alarmRingtone || 'digital');
+      startAlarmSound(snd);
+      setTimeout(() => stopAlarmSound(), 2200);
+      showToast(`Previewing ${snd.toUpperCase()} alarm ringtone 🔊`);
+    });
+  }
+
+  if (el.notifSoundSelect) {
+    el.notifSoundSelect.value = (state.settings && state.settings.notificationSound) || 'chime';
+    el.notifSoundSelect.addEventListener('change', (e) => {
+      state.settings.notificationSound = e.target.value;
+      saveState();
+      playClickSound();
+      showToast(`Notification sound set to ${e.target.selectedOptions[0].text}`);
+    });
+  }
+
+  if (el.testNotifSoundBtn) {
+    el.testNotifSoundBtn.addEventListener('click', () => {
+      const snd = el.notifSoundSelect ? el.notifSoundSelect.value : (state.settings.notificationSound || 'chime');
+      playNotificationSound(snd);
+      showToast(`Previewing ${snd.toUpperCase()} notification sound 🔔`);
+    });
+  }
+
+  if (el.settingsSoundVolumeSlider) {
+    const curVol = typeof state.settings.soundVolume === 'number' ? state.settings.soundVolume : 0.8;
+    el.settingsSoundVolumeSlider.value = Math.round(curVol * 100);
+    if (el.settingsSoundVolumeVal) el.settingsSoundVolumeVal.textContent = `${Math.round(curVol * 100)}%`;
+
+    el.settingsSoundVolumeSlider.addEventListener('input', (e) => {
+      const ratio = parseInt(e.target.value, 10) / 100;
+      state.settings.soundVolume = ratio;
+      if (el.settingsSoundVolumeVal) el.settingsSoundVolumeVal.textContent = `${e.target.value}%`;
+      saveState();
+    });
+    el.settingsSoundVolumeSlider.addEventListener('change', () => {
+      playNotificationSound();
+    });
+  }
+
+  if (el.settingsVibrateToggle) {
+    el.settingsVibrateToggle.checked = state.settings.vibrationEnabled !== false;
+    el.settingsVibrateToggle.addEventListener('change', (e) => {
+      state.settings.vibrationEnabled = e.target.checked;
+      saveState();
+      playClickSound();
+      if (e.target.checked) triggerVibrate([60, 40, 60]);
+      showToast(e.target.checked ? 'Haptic vibration enabled' : 'Haptic vibration disabled');
+    });
+  }
+
+  // System Notification Permission UI in Settings
+  function updateNotifSettingsUI() {
+    if (!el.settingsNotifStatusBadge) return;
+    if (!('Notification' in window)) {
+      el.settingsNotifStatusBadge.textContent = 'Not Supported';
+      el.settingsNotifStatusBadge.className = 'badge-pill badge-muted';
+      if (el.settingsReqNotifBtn) el.settingsReqNotifBtn.style.display = 'none';
+      return;
+    }
+
+    if (Notification.permission === 'granted') {
+      el.settingsNotifStatusBadge.textContent = 'Active 🟢';
+      el.settingsNotifStatusBadge.className = 'badge-pill badge-success';
+      if (el.settingsReqNotifBtn) {
+        el.settingsReqNotifBtn.textContent = '🔔 Test Notification';
+        el.settingsReqNotifBtn.className = 'btn btn-secondary btn-sm';
+      }
+    } else if (Notification.permission === 'denied') {
+      el.settingsNotifStatusBadge.textContent = 'Blocked 🔴';
+      el.settingsNotifStatusBadge.className = 'badge-pill badge-danger';
+      if (el.settingsReqNotifBtn) {
+        el.settingsReqNotifBtn.textContent = '⚠️ Blocked (How to Fix)';
+        el.settingsReqNotifBtn.className = 'btn btn-ghost btn-sm';
+      }
+    } else {
+      el.settingsNotifStatusBadge.textContent = 'Permission Needed ⚠️';
+      el.settingsNotifStatusBadge.className = 'badge-pill badge-warning';
+      if (el.settingsReqNotifBtn) {
+        el.settingsReqNotifBtn.textContent = '🔔 Enable Notifications';
+        el.settingsReqNotifBtn.className = 'btn btn-primary btn-sm';
+      }
+    }
+  }
+
+  if (el.settingsReqNotifBtn) {
+    el.settingsReqNotifBtn.addEventListener('click', () => {
+      playClickSound();
+      if (!('Notification' in window)) {
+        showToast('Notifications not supported by this browser.', 'alert');
+        return;
+      }
+      if (Notification.permission === 'granted') {
+        const uName = (state.profile && state.profile.name) ? state.profile.name : 'Achiever';
+        dispatchSystemNotification(
+          `ActiDay Notification Active 🔔`,
+          `Hello ${uName}! Your alarm and routine reminders are connected & working.`
+        );
+        showToast('Test notification sent! 🔔', 'success');
+      } else if (Notification.permission === 'denied') {
+        showToast('Notifications are blocked in site settings. Click lock icon in browser to allow.', 'alert');
+      } else {
+        requestNotificationAccess();
+      }
     });
   }
 
@@ -3797,6 +4101,8 @@
         console.log('Notification fallback:', e);
       }
     }
+
+    playNotificationSound();
   }
 
   function updateNotifButtonUI() {
@@ -3894,8 +4200,23 @@
     }
     updateNotifButtonUI();
 
-    if (el.timeFormatSelect && state.settings) {
-      el.timeFormatSelect.value = state.settings.timeFormat || '12h';
+    // Initialize profile & notification settings UI
+    renderProfileUI();
+    updateNotifSettingsUI();
+
+    if (el.alarmRingtoneSelect && state.settings) {
+      el.alarmRingtoneSelect.value = state.settings.alarmRingtone || 'digital';
+    }
+    if (el.notifSoundSelect && state.settings) {
+      el.notifSoundSelect.value = state.settings.notificationSound || 'chime';
+    }
+    if (el.settingsVibrateToggle && state.settings) {
+      el.settingsVibrateToggle.checked = state.settings.vibrationEnabled !== false;
+    }
+    if (el.settingsSoundVolumeSlider && state.settings) {
+      const volRatio = typeof state.settings.soundVolume === 'number' ? state.settings.soundVolume : 0.8;
+      el.settingsSoundVolumeSlider.value = Math.round(volRatio * 100);
+      if (el.settingsSoundVolumeVal) el.settingsSoundVolumeVal.textContent = `${Math.round(volRatio * 100)}%`;
     }
 
     if (el.ambientVolumeSlider && state.ambientSound) {
