@@ -4,6 +4,7 @@ node_modules/
 # Build outputs & caches
 dist/
 build/
+*.apk
 .gradle/
 android/.gradle/
 android/build/
