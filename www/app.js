@@ -18,7 +18,8 @@
       vibrationEnabled: true,
       alarmBellEnabled: true,
       metronomeEnabled: false,
-      showDeviceFrame: true
+      showDeviceFrame: true,
+      timeFormat: '12h'
     },
     routines: [
       {
@@ -236,6 +237,8 @@
       if (saved) {
         const parsed = JSON.parse(saved);
         const merged = { ...DEFAULT_DATA, ...parsed };
+        if (!merged.settings) merged.settings = JSON.parse(JSON.stringify(DEFAULT_DATA.settings));
+        if (!merged.settings.timeFormat) merged.settings.timeFormat = '12h';
         if (!merged.gamification) merged.gamification = JSON.parse(JSON.stringify(DEFAULT_DATA.gamification));
         if (!merged.ambientSound) merged.ambientSound = JSON.parse(JSON.stringify(DEFAULT_DATA.ambientSound));
         if (!merged.focusConfig) merged.focusConfig = JSON.parse(JSON.stringify(DEFAULT_DATA.focusConfig));
@@ -1011,6 +1014,8 @@
     // Header & Status
     statusClock: document.getElementById('statusClock'),
     liveDigitalClock: document.getElementById('liveDigitalClock'),
+    digitalClockCard: document.getElementById('digitalClockCard'),
+    timeFormatSelect: document.getElementById('timeFormatSelect'),
     currentDateBadge: document.getElementById('currentDateBadge'),
     greetingHeading: document.getElementById('greetingHeading'),
     headerStreakCount: document.getElementById('headerStreakCount'),
@@ -1251,15 +1256,37 @@
   // ==========================================================================
   // 4. CLOCK & ACTIVE ROUTINE SCHEDULER
   // ==========================================================================
+  function formatTimeDisplay(timeStr) {
+    if (!timeStr) return '';
+    const is12Hour = !state.settings || state.settings.timeFormat !== '24h';
+    if (!is12Hour) return timeStr;
+    const [h, m] = timeStr.split(':').map(Number);
+    const period = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 === 0 ? 12 : h % 12;
+    return `${h12}:${String(m).padStart(2, '0')} ${period}`;
+  }
+
   function updateClock() {
     const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
+    const rawHours = now.getHours();
     const mins = String(now.getMinutes()).padStart(2, '0');
     const secs = String(now.getSeconds()).padStart(2, '0');
-    const timeStr = `${hours}:${mins}:${secs}`;
-    const shortTime = `${hours}:${mins}`;
+    const is12Hour = !state.settings || state.settings.timeFormat !== '24h';
 
-    if (el.liveDigitalClock) el.liveDigitalClock.textContent = timeStr;
+    let timeStr, shortTime;
+    if (is12Hour) {
+      const h12 = rawHours % 12 === 0 ? 12 : rawHours % 12;
+      const hours12 = String(h12).padStart(2, '0');
+      const ampm = rawHours >= 12 ? 'PM' : 'AM';
+      timeStr = `${hours12}:${mins}:${secs} <span class="clock-ampm">${ampm}</span>`;
+      shortTime = `${h12}:${mins} ${ampm}`;
+    } else {
+      const hours24 = String(rawHours).padStart(2, '0');
+      timeStr = `${hours24}:${mins}:${secs}`;
+      shortTime = `${hours24}:${mins}`;
+    }
+
+    if (el.liveDigitalClock) el.liveDigitalClock.innerHTML = timeStr;
     if (el.statusClock) el.statusClock.textContent = shortTime;
 
     // Date formatting
@@ -1312,7 +1339,15 @@
 
     if (el.alarmRingLiveClock) {
       const secs = String(now.getSeconds()).padStart(2, '0');
-      el.alarmRingLiveClock.textContent = `${currentTimeStr}:${secs}`;
+      const is12Hour = !state.settings || state.settings.timeFormat !== '24h';
+      if (is12Hour) {
+        const rawHours = now.getHours();
+        const h12 = rawHours % 12 === 0 ? 12 : rawHours % 12;
+        const ampm = rawHours >= 12 ? 'PM' : 'AM';
+        el.alarmRingLiveClock.textContent = `${String(h12).padStart(2, '0')}:${currentMin}:${secs} ${ampm}`;
+      } else {
+        el.alarmRingLiveClock.textContent = `${currentTimeStr}:${secs}`;
+      }
     }
 
     // Guard against re-triggering during the same minute
@@ -1522,7 +1557,7 @@
 
       if (el.heroActivityEmoji) el.heroActivityEmoji.textContent = activeItem.emoji || '⚡';
       if (el.heroActivityTitle) el.heroActivityTitle.textContent = activeItem.title;
-      if (el.heroActivityInterval) el.heroActivityInterval.textContent = `${activeItem.startTime} - ${activeItem.endTime}`;
+      if (el.heroActivityInterval) el.heroActivityInterval.textContent = `${formatTimeDisplay(activeItem.startTime)} - ${formatTimeDisplay(activeItem.endTime)}`;
       if (el.heroCategoryTag) el.heroCategoryTag.textContent = activeItem.category;
       if (el.heroTimeRemaining) el.heroTimeRemaining.textContent = `${remaining}m remaining`;
       if (el.heroProgressBar) el.heroProgressBar.style.width = `${pct}%`;
@@ -1533,7 +1568,7 @@
     } else if (nextItem) {
       if (el.heroActivityEmoji) el.heroActivityEmoji.textContent = '⏳';
       if (el.heroActivityTitle) el.heroActivityTitle.textContent = `Next Up: ${nextItem.title}`;
-      if (el.heroActivityInterval) el.heroActivityInterval.textContent = `Starts at ${nextItem.startTime}`;
+      if (el.heroActivityInterval) el.heroActivityInterval.textContent = `Starts at ${formatTimeDisplay(nextItem.startTime)}`;
       if (el.heroCategoryTag) el.heroCategoryTag.textContent = nextItem.category;
       if (el.heroTimeRemaining) el.heroTimeRemaining.textContent = `In ${smallestFutureDiff}m`;
       if (el.heroProgressBar) el.heroProgressBar.style.width = '0%';
@@ -1621,7 +1656,7 @@
         <div class="routine-emoji-wrap">${r.emoji || '⚡'}</div>
         <div class="routine-info-col">
           <div class="routine-time-row">
-            <span class="routine-time-text">${r.startTime} - ${r.endTime}</span>
+            <span class="routine-time-text">${formatTimeDisplay(r.startTime)} - ${formatTimeDisplay(r.endTime)}</span>
             <span class="category-badge">${r.category}</span>
             ${r.alarm ? '<span class="category-badge" style="color:#fbbf24; background:rgba(251, 191, 36, 0.15);" title="Alarm set">⏰ Alarm</span>' : ''}
           </div>
@@ -2845,6 +2880,32 @@
     });
   }
 
+  // 12-Hour / 24-Hour Clock Toggle & Selector
+  if (el.digitalClockCard) {
+    el.digitalClockCard.addEventListener('click', () => {
+      playClickSound();
+      const current = (state.settings && state.settings.timeFormat) || '12h';
+      const next = current === '24h' ? '12h' : '24h';
+      state.settings.timeFormat = next;
+      saveState();
+      updateClock();
+      renderRoutines();
+      if (el.timeFormatSelect) el.timeFormatSelect.value = next;
+      showToast(`Clock switched to ${next === '12h' ? '12-Hour (AM/PM)' : '24-Hour standard'}`);
+    });
+  }
+
+  if (el.timeFormatSelect) {
+    el.timeFormatSelect.addEventListener('change', (e) => {
+      state.settings.timeFormat = e.target.value;
+      saveState();
+      updateClock();
+      renderRoutines();
+      playClickSound();
+      showToast(`Clock display set to ${e.target.value === '12h' ? '12-Hour (AM/PM)' : '24-Hour'}`);
+    });
+  }
+
   if (el.soundToggleBtn) {
     el.soundToggleBtn.addEventListener('click', () => {
       state.settings.soundEnabled = !state.settings.soundEnabled;
@@ -3832,6 +3893,10 @@
       updateConnectivityUI(false);
     }
     updateNotifButtonUI();
+
+    if (el.timeFormatSelect && state.settings) {
+      el.timeFormatSelect.value = state.settings.timeFormat || '12h';
+    }
 
     if (el.ambientVolumeSlider && state.ambientSound) {
       el.ambientVolumeSlider.value = Math.round((state.ambientSound.volume || 0.65) * 100);

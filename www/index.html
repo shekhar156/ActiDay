@@ -78,9 +78,9 @@
 
         <!-- Live Clock & Quick Progress Ribbon -->
         <div class="header-ribbon">
-          <div class="digital-clock-card">
-            <span class="clock-label">CURRENT TIME</span>
-            <span class="clock-display" id="liveDigitalClock">09:41:00</span>
+          <div class="digital-clock-card" id="digitalClockCard" title="Tap to toggle 12-Hour / 24-Hour mode" role="button" tabindex="0">
+            <span class="clock-label">CURRENT TIME <span style="font-size:0.6rem;opacity:0.8;">⇄</span></span>
+            <span class="clock-display" id="liveDigitalClock">09:41:00 <span class="clock-ampm">AM</span></span>
           </div>
           <div class="quick-stat-card" id="quickRoutineStatCard">
             <div class="stat-text-col">
@@ -634,6 +634,17 @@
             <option value="theme-dark">Midnight Dark (AMOLED)</option>
             <option value="theme-light">Fresh Light</option>
             <option value="theme-neon">Cyber Glow</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <strong>Clock Display Format</strong>
+            <p class="setting-caption">Switch 12-Hour (AM/PM) or 24-Hour counter</p>
+          </div>
+          <select id="timeFormatSelect" aria-label="Clock Display Format">
+            <option value="12h" selected>12-Hour (AM / PM)</option>
+            <option value="24h">24-Hour (Military / Standard)</option>
           </select>
         </div>
 

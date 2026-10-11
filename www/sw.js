@@ -1,5 +1,5 @@
-const STATIC_CACHE = 'actiday-static-v3';
-const RUNTIME_CACHE = 'actiday-runtime-v3';
+const STATIC_CACHE = 'actiday-static-v4';
+const RUNTIME_CACHE = 'actiday-runtime-v4';
 
 const ASSETS_TO_CACHE = [
   './',
