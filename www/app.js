@@ -18,7 +18,8 @@
       title: 'Consistency Achiever'
     },
     settings: {
-      theme: 'theme-dark',
+      theme: 'theme-night',
+      themeMode: 'default',
       soundEnabled: true,
       soundVolume: 0.8,
       vibrationEnabled: true,
@@ -249,6 +250,7 @@
         if (!merged.profile.name) merged.profile.name = 'Mahab';
         if (!merged.profile.avatar) merged.profile.avatar = '🚀';
         if (!merged.settings) merged.settings = JSON.parse(JSON.stringify(DEFAULT_DATA.settings));
+        if (!merged.settings.themeMode) merged.settings.themeMode = localStorage.getItem('actiday_theme_mode') || 'default';
         if (!merged.settings.timeFormat) merged.settings.timeFormat = '12h';
         if (!merged.settings.alarmRingtone) merged.settings.alarmRingtone = 'digital';
         if (!merged.settings.notificationSound) merged.settings.notificationSound = 'chime';
@@ -1217,6 +1219,17 @@
     closeSettingsModalBtn: document.getElementById('closeSettingsModalBtn'),
     doneSettingsModalBtn: document.getElementById('doneSettingsModalBtn'),
     themeSelect: document.getElementById('themeSelect'),
+    themeHeaderBtn: document.getElementById('themeHeaderBtn'),
+    headerThemeIcon: document.getElementById('headerThemeIcon'),
+    userViewThemeBar: document.getElementById('userViewThemeBar'),
+    userViewThemeStatusTag: document.getElementById('userViewThemeStatusTag'),
+    themePillDay: document.getElementById('themePillDay'),
+    themePillNight: document.getElementById('themePillNight'),
+    themePillDefault: document.getElementById('themePillDefault'),
+    themePillSystemBadge: document.getElementById('themePillSystemBadge'),
+    settingsThemeCardDay: document.getElementById('settingsThemeCardDay'),
+    settingsThemeCardNight: document.getElementById('settingsThemeCardNight'),
+    settingsThemeCardDefault: document.getElementById('settingsThemeCardDefault'),
     testSoundBtn: document.getElementById('testSoundBtn'),
     testVibrateBtn: document.getElementById('testVibrateBtn'),
     toggleDeviceFrameBtn: document.getElementById('toggleDeviceFrameBtn'),
@@ -3245,6 +3258,208 @@
   }
 
   // ==========================================================================
+  // 10b. THEME MODE ENGINE (Day, Night, and Default System Mode)
+  // ==========================================================================
+  function applyThemeMode(mode, save = true) {
+    const validModes = ['day', 'night', 'default'];
+    const chosenMode = validModes.includes(mode) ? mode : 'default';
+
+    const isSystemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    let effectiveScheme = 'night';
+
+    if (chosenMode === 'day') {
+      effectiveScheme = 'day';
+    } else if (chosenMode === 'night') {
+      effectiveScheme = 'night';
+    } else {
+      // Default: Follows system device preference
+      effectiveScheme = isSystemDark ? 'night' : 'day';
+    }
+
+    // Set classes on body
+    if (effectiveScheme === 'day') {
+      document.body.classList.remove('theme-night', 'theme-dark');
+      document.body.classList.add('theme-day', 'theme-light');
+    } else {
+      document.body.classList.remove('theme-day', 'theme-light');
+      document.body.classList.add('theme-night', 'theme-dark');
+    }
+
+    // Set dataset attributes on documentElement
+    document.documentElement.setAttribute('data-theme-mode', chosenMode);
+    document.documentElement.setAttribute('data-resolved-theme', effectiveScheme);
+
+    // Update <meta name="theme-color"> for Android status bar and mobile browsers
+    const metaColor = document.getElementById('appThemeColor');
+    if (metaColor) {
+      metaColor.content = (effectiveScheme === 'day') ? '#f4f6fb' : '#080c14';
+    }
+
+    // Update <meta name="color-scheme">
+    const metaScheme = document.getElementById('appColorScheme');
+    if (metaScheme) {
+      metaScheme.content = (chosenMode === 'default') ? 'light dark' : (chosenMode === 'day' ? 'light' : 'dark');
+    }
+
+    // Update User View Theme Bar in header
+    if (el.themePillDay) {
+      el.themePillDay.classList.toggle('active', chosenMode === 'day');
+      el.themePillDay.setAttribute('aria-checked', chosenMode === 'day' ? 'true' : 'false');
+    }
+    if (el.themePillNight) {
+      el.themePillNight.classList.toggle('active', chosenMode === 'night');
+      el.themePillNight.setAttribute('aria-checked', chosenMode === 'night' ? 'true' : 'false');
+    }
+    if (el.themePillDefault) {
+      el.themePillDefault.classList.toggle('active', chosenMode === 'default');
+      el.themePillDefault.setAttribute('aria-checked', chosenMode === 'default' ? 'true' : 'false');
+    }
+
+    if (el.themePillSystemBadge) {
+      if (chosenMode === 'default') {
+        el.themePillSystemBadge.textContent = isSystemDark ? '🌙 Night' : '☀️ Day';
+      } else {
+        el.themePillSystemBadge.textContent = 'Auto';
+      }
+    }
+
+    if (el.userViewThemeStatusTag) {
+      if (chosenMode === 'day') {
+        el.userViewThemeStatusTag.innerHTML = '☀️ Day Mode';
+      } else if (chosenMode === 'night') {
+        el.userViewThemeStatusTag.innerHTML = '🌙 Night Mode';
+      } else {
+        el.userViewThemeStatusTag.innerHTML = isSystemDark ? '🌓 System (🌙 Night)' : '🌓 System (☀️ Day)';
+      }
+    }
+
+    if (el.headerThemeIcon) {
+      if (chosenMode === 'day') {
+        el.headerThemeIcon.textContent = '☀️';
+      } else if (chosenMode === 'night') {
+        el.headerThemeIcon.textContent = '🌙';
+      } else {
+        el.headerThemeIcon.textContent = '🌓';
+      }
+    }
+
+    // Update Settings Modal Theme Cards
+    if (el.settingsThemeCardDay) {
+      el.settingsThemeCardDay.classList.toggle('active', chosenMode === 'day');
+      el.settingsThemeCardDay.setAttribute('aria-checked', chosenMode === 'day' ? 'true' : 'false');
+    }
+    if (el.settingsThemeCardNight) {
+      el.settingsThemeCardNight.classList.toggle('active', chosenMode === 'night');
+      el.settingsThemeCardNight.setAttribute('aria-checked', chosenMode === 'night' ? 'true' : 'false');
+    }
+    if (el.settingsThemeCardDefault) {
+      el.settingsThemeCardDefault.classList.toggle('active', chosenMode === 'default');
+      el.settingsThemeCardDefault.setAttribute('aria-checked', chosenMode === 'default' ? 'true' : 'false');
+    }
+
+    if (el.themeSelect) {
+      el.themeSelect.value = chosenMode;
+    }
+
+    if (save) {
+      if (!state.settings) state.settings = {};
+      state.settings.themeMode = chosenMode;
+      saveState();
+      try {
+        localStorage.setItem('actiday_theme_mode', chosenMode);
+      } catch (e) {}
+    }
+  }
+
+  // Header quick theme toggle cycling: Day -> Night -> Default
+  if (el.themeHeaderBtn) {
+    el.themeHeaderBtn.addEventListener('click', () => {
+      playClickSound();
+      triggerVibrate([35]);
+      const current = (state.settings && state.settings.themeMode) || 'default';
+      const order = ['day', 'night', 'default'];
+      const nextIndex = (order.indexOf(current) + 1) % order.length;
+      const nextMode = order[nextIndex];
+      applyThemeMode(nextMode);
+      const names = { day: '☀️ Day Mode active', night: '🌙 Night Mode active', default: '🌓 System Default active' };
+      showToast(names[nextMode]);
+    });
+  }
+
+  // User View Theme Bar Pill Triggers
+  if (el.themePillDay) {
+    el.themePillDay.addEventListener('click', () => {
+      playClickSound();
+      triggerVibrate([30]);
+      applyThemeMode('day');
+      showToast('☀️ Day Mode activated!');
+    });
+  }
+
+  if (el.themePillNight) {
+    el.themePillNight.addEventListener('click', () => {
+      playClickSound();
+      triggerVibrate([30]);
+      applyThemeMode('night');
+      showToast('🌙 Night Mode activated!');
+    });
+  }
+
+  if (el.themePillDefault) {
+    el.themePillDefault.addEventListener('click', () => {
+      playClickSound();
+      triggerVibrate([30]);
+      applyThemeMode('default');
+      showToast('🌓 Default Mode (Adaptive to device theme)');
+    });
+  }
+
+  // Settings Modal Theme Card Triggers
+  if (el.settingsThemeCardDay) {
+    el.settingsThemeCardDay.addEventListener('click', () => {
+      playClickSound();
+      triggerVibrate([30]);
+      applyThemeMode('day');
+      showToast('☀️ Day Mode selected');
+    });
+  }
+
+  if (el.settingsThemeCardNight) {
+    el.settingsThemeCardNight.addEventListener('click', () => {
+      playClickSound();
+      triggerVibrate([30]);
+      applyThemeMode('night');
+      showToast('🌙 Night Mode selected');
+    });
+  }
+
+  if (el.settingsThemeCardDefault) {
+    el.settingsThemeCardDefault.addEventListener('click', () => {
+      playClickSound();
+      triggerVibrate([30]);
+      applyThemeMode('default');
+      showToast('🌓 Default Mode selected');
+    });
+  }
+
+  if (el.themeSelect) {
+    el.themeSelect.addEventListener('change', (e) => {
+      applyThemeMode(e.target.value);
+    });
+  }
+
+  // Live listener for OS theme shifts when set to Default
+  if (window.matchMedia) {
+    try {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if (state.settings && state.settings.themeMode === 'default') {
+          applyThemeMode('default', false);
+        }
+      });
+    } catch (e) {}
+  }
+
+  // ==========================================================================
   // 11. GAMIFICATION, XP & BADGES SYSTEM
   // ==========================================================================
   const LEVELS = [
@@ -4203,6 +4418,10 @@
     // Initialize profile & notification settings UI
     renderProfileUI();
     updateNotifSettingsUI();
+
+    // Initialize Theme Mode: Day, Night, or Default System Mode
+    const savedThemeMode = (state.settings && state.settings.themeMode) || localStorage.getItem('actiday_theme_mode') || 'default';
+    applyThemeMode(savedThemeMode, false);
 
     if (el.alarmRingtoneSelect && state.settings) {
       el.alarmRingtoneSelect.value = state.settings.alarmRingtone || 'digital';

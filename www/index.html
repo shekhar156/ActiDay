@@ -16,22 +16,46 @@
   <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
   <link rel="apple-touch-icon" href="icons/icon.svg">
   
-  <!-- Modern Font Stack -->
+  <!-- Modern Font Stack (Outfit + Plus Jakarta Sans + JetBrains Mono) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <!-- Critical First-Paint Splash Color (Matches manifest background_color to eliminate flash) -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  
+  <meta name="color-scheme" id="appColorScheme" content="light dark">
+
+  <!-- Immediate Theme Initialization Script to prevent FOUC (Day, Night, Default) -->
+  <script>
+    (function () {
+      try {
+        var mode = localStorage.getItem('actiday_theme_mode') || 'default';
+        var isSysDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var resolved = (mode === 'day') ? 'day' : (mode === 'night' ? 'night' : (isSysDark ? 'night' : 'day'));
+        document.documentElement.setAttribute('data-theme-mode', mode);
+        document.documentElement.setAttribute('data-resolved-theme', resolved);
+        var metaColor = document.getElementById('appThemeColor');
+        if (metaColor) {
+          metaColor.content = (resolved === 'day') ? '#f4f6fb' : '#080c14';
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- Critical First-Paint Splash Color -->
   <style>
     html, body {
-      background-color: #080b11;
+      background-color: #080c14;
       color: #f8fafc;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+    html[data-resolved-theme="day"] body {
+      background-color: #f4f6fb;
+      color: #0f172a;
     }
   </style>
 
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-  
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="theme-dark">
+<body class="theme-night">
 
   <!-- Desktop Device Preview Frame Wrapper -->
   <div class="device-wrapper" id="deviceWrapper">
@@ -73,6 +97,9 @@
             <button class="icon-btn" id="soundToggleBtn" title="Toggle Sound FX" aria-label="Toggle Sound">
               <span id="soundIcon">🔊</span>
             </button>
+            <button class="icon-btn theme-header-btn" id="themeHeaderBtn" title="Toggle Day / Night / Default View" aria-label="Toggle Theme">
+              <span id="headerThemeIcon">🌓</span>
+            </button>
             <button class="icon-btn" id="settingsBtn" title="App Settings" aria-label="Settings">
               ⚙️
             </button>
@@ -96,6 +123,29 @@
                 <path class="circle" id="headerRingProgress" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
               </svg>
             </div>
+          </div>
+        </div>
+
+        <!-- User View Quick Theme Mode Selector (Day, Night, and Default System Mode) -->
+        <div class="user-view-theme-bar" id="userViewThemeBar">
+          <div class="theme-bar-meta">
+            <span class="theme-bar-label">VIEW MODE</span>
+            <span class="theme-bar-active-tag" id="userViewThemeStatusTag">🌓 System Auto</span>
+          </div>
+          <div class="theme-segmented-pills" role="radiogroup" aria-label="Day Night Default Theme Selector">
+            <button type="button" class="theme-pill-btn" id="themePillDay" data-mode="day" role="radio" aria-checked="false" title="Switch to Day Mode (Luminous & Crisp)">
+              <span class="pill-icon">☀️</span>
+              <span class="pill-name">Day</span>
+            </button>
+            <button type="button" class="theme-pill-btn" id="themePillNight" data-mode="night" role="radio" aria-checked="false" title="Switch to Night Mode (Deep OLED Dark)">
+              <span class="pill-icon">🌙</span>
+              <span class="pill-name">Night</span>
+            </button>
+            <button type="button" class="theme-pill-btn active" id="themePillDefault" data-mode="default" role="radio" aria-checked="true" title="Switch to Default (System Adaptive) Mode">
+              <span class="pill-icon">🌓</span>
+              <span class="pill-name">Default</span>
+              <span class="pill-badge" id="themePillSystemBadge">Auto</span>
+            </button>
           </div>
         </div>
       </header>
@@ -778,15 +828,32 @@
             </div>
           </div>
 
-          <div class="setting-row">
+          <div class="setting-row-stacked">
             <div>
-              <strong>Theme Mode</strong>
-              <p class="setting-caption">Choose color theme</p>
+              <strong>App View Mode & Theme</strong>
+              <p class="setting-caption">Choose your visual environment: Day, Night, or Default System</p>
             </div>
-            <select id="themeSelect" aria-label="Theme Mode">
-              <option value="theme-dark">Midnight Dark (AMOLED)</option>
-              <option value="theme-light">Fresh Light</option>
-              <option value="theme-neon">Cyber Glow</option>
+            <div class="settings-theme-cards-grid" role="radiogroup" aria-label="Settings Theme Mode">
+              <button type="button" class="settings-theme-card" data-mode="day" id="settingsThemeCardDay" role="radio" aria-checked="false">
+                <span class="theme-card-icon">☀️</span>
+                <span class="theme-card-title">Day Mode</span>
+                <span class="theme-card-desc">Crisp daylight, clean white cards</span>
+              </button>
+              <button type="button" class="settings-theme-card" data-mode="night" id="settingsThemeCardNight" role="radio" aria-checked="false">
+                <span class="theme-card-icon">🌙</span>
+                <span class="theme-card-title">Night Mode</span>
+                <span class="theme-card-desc">OLED midnight obsidian & neon glow</span>
+              </button>
+              <button type="button" class="settings-theme-card active" data-mode="default" id="settingsThemeCardDefault" role="radio" aria-checked="true">
+                <span class="theme-card-icon">🌓</span>
+                <span class="theme-card-title">Default Mode</span>
+                <span class="theme-card-desc">Auto adapts to phone system setting</span>
+              </button>
+            </div>
+            <select id="themeSelect" aria-label="Theme Mode Selection" style="display:none;">
+              <option value="day">☀️ Day Mode</option>
+              <option value="night">🌙 Night Mode</option>
+              <option value="default" selected>🌓 Default Mode (System)</option>
             </select>
           </div>
 
