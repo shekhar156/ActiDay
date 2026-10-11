@@ -128,8 +128,21 @@
             </button>
 
             <!-- Compatibility anchors for cached DOM queries -->
-            <button class="icon-btn" id="notifToggleBtn" style="display:none;" aria-hidden="true"><span id="notifIcon">🔔</span></button>
-            <button class="icon-btn" id="soundToggleBtn" style="display:none;" aria-hidden="true"><span id="soundIcon">🔊</span></button>
+            <div id="compatAnchors" style="display:none;" aria-hidden="true">
+              <span id="statusClock"></span>
+              <span id="networkStatusIcon"></span>
+              <span id="wifiStatusIcon"></span>
+              <span id="userViewThemeBar"></span>
+              <span id="userViewThemeStatusTag"></span>
+              <span id="themePillDay"></span>
+              <span id="themePillNight"></span>
+              <span id="themePillDefault"></span>
+              <span id="themePillSystemBadge"></span>
+              <button id="testSoundBtn"></button>
+              <button id="bottomThemeLogoBtn"><span id="bottomThemeLogoDisc"></span><span id="bottomThemeLogoIcon"></span></button>
+              <button id="notifToggleBtn"><span id="notifIcon">🔔</span></button>
+              <button id="soundToggleBtn"><span id="soundIcon">🔊</span></button>
+            </div>
           </div>
         </div>
       </header>
@@ -356,7 +369,7 @@
                 <!-- Focus Session Goal / Intention Input -->
                 <div class="focus-intention-input-row">
                   <span class="intention-icon">🎯</span>
-                  <input type="text" id="focusInlineIntentionInput" placeholder="Session goal (e.g. Android Feature, Coding, Study)..." maxlength="60" class="focus-intention-input">
+                  <input type="text" id="focusInlineIntentionInput" placeholder="Session goal (e.g. Android Feature, Coding, Study)..." maxlength="60" class="focus-intention-input" aria-label="Session Goal Intention">
                 </div>
               </div>
             </div>
@@ -842,7 +855,7 @@
               <p class="setting-caption">Volume level for all sounds: <span id="settingsSoundVolumeVal">80%</span></p>
             </div>
             <div class="setting-slider-wrap">
-              <input type="range" id="settingsSoundVolumeSlider" min="0" max="100" value="80" class="custom-range-slider">
+              <input type="range" id="settingsSoundVolumeSlider" min="0" max="100" value="80" class="custom-range-slider" aria-label="Master Audio Volume">
             </div>
           </div>
 
@@ -1156,7 +1169,7 @@
         <div class="form-group">
           <label for="customFocusDurationInput">Focus Duration (Minutes: 1 - 180)</label>
           <div class="range-input-wrap">
-            <input type="range" id="customFocusDurationSlider" min="1" max="120" value="25" class="custom-range-slider">
+            <input type="range" id="customFocusDurationSlider" min="1" max="120" value="25" class="custom-range-slider" aria-label="Custom Focus Duration">
             <input type="number" id="customFocusDurationInput" min="1" max="180" value="25" class="number-input-pill">
           </div>
         </div>

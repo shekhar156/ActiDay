@@ -5,6 +5,7 @@
   "main": "www/index.html",
   "scripts": {
     "start": "node server.js",
+    "test": "node test-runner.js",
     "cap:add": "npx cap add android",
     "cap:sync": "npx cap sync android",
     "cap:open": "npx cap open android",
