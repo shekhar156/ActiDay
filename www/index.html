@@ -60,6 +60,10 @@
               <span class="streak-flame">🔥</span>
               <span class="streak-num" id="headerStreakCount">7</span>
             </button>
+            <button class="icon-btn alarm-header-btn" id="alarmHeaderBtn" title="Alarms & Wake Schedules" aria-label="Alarms">
+              <span id="alarmIcon">⏰</span>
+              <span class="alarm-badge-dot" id="alarmActiveDot"></span>
+            </button>
             <button class="icon-btn" id="notifToggleBtn" title="Enable Reminders & Notifications" aria-label="Notifications">
               <span id="notifIcon">🔔</span>
             </button>
@@ -219,7 +223,17 @@
         <section class="tab-view" id="tabFocus">
           <div class="tab-header-box text-center">
             <h2 class="tab-heading">Focus & Pomodoro</h2>
-            <p class="tab-subheading">Eliminate distractions and flow</p>
+            <p class="tab-subheading">Eliminate distractions, customize sessions & flow</p>
+          </div>
+
+          <!-- Focus Action Toolbar: Customization & Zen Mode -->
+          <div class="focus-top-toolbar">
+            <button class="btn btn-secondary btn-sm" id="openCustomFocusModalBtn">
+              ⚙️ Customize Focus Time
+            </button>
+            <button class="btn btn-primary btn-sm" id="enterZenModeBtn">
+              🧘 Deep Zen Mode
+            </button>
           </div>
 
           <!-- Timer Mode Switcher -->
@@ -228,6 +242,7 @@
             <button class="timer-mode-btn" data-mode="shortBreak" data-duration="5">☕ Short 5m</button>
             <button class="timer-mode-btn" data-mode="longBreak" data-duration="15">🌴 Long 15m</button>
             <button class="timer-mode-btn" data-mode="custom" data-duration="50">⚡ Deep 50m</button>
+            <button class="timer-mode-btn" data-mode="customConfig" id="timerCustomModeBtn">⚙️ Custom (<span id="customModeBadgeTime">45m</span>)</button>
           </div>
 
           <!-- Circular Timer Display -->
@@ -247,6 +262,7 @@
               <span class="timer-session-badge" id="timerSessionBadge">SESSION 1 OF 4</span>
               <span class="timer-digits" id="timerDigits">25:00</span>
               <span class="timer-sub-status" id="timerSubStatus">Ready to focus</span>
+              <div class="focus-intention-badge" id="focusIntentionDisplay">🎯 Focus: Deep Work &amp; Flow</div>
             </div>
           </div>
 
@@ -266,7 +282,20 @@
           <!-- Focus Sound & Ambient Options -->
           <div class="focus-ambient-options">
             <div class="ambient-toggle-row">
-              <span>🔔 Sound Bell at Finish</span>
+              <span>🔔 Finish Alarm Sound</span>
+              <div class="finish-sound-picker-wrap">
+                <select id="timerFinishSoundSelect" class="finish-sound-select" aria-label="Finish alarm sound">
+                  <option value="bowl">🧘 Tibetan Singing Bowl</option>
+                  <option value="digital">⏰ Digital Alarm Beep</option>
+                  <option value="marimba">🎵 Crystal Marimba</option>
+                  <option value="fanfare">🏆 8-Bit Fanfare</option>
+                  <option value="radar">📡 Radar Pulse Alert</option>
+                </select>
+                <button type="button" class="btn btn-ghost btn-xs" id="testFinishSoundBtn" title="Preview Finish Sound">▶ Test</button>
+              </div>
+            </div>
+            <div class="ambient-toggle-row">
+              <span>🔊 Alarm Sound Active</span>
               <label class="switch">
                 <input type="checkbox" id="timerAlarmToggle" checked>
                 <span class="slider"></span>
@@ -297,7 +326,7 @@
               </div>
               <button class="btn btn-ghost btn-sm" id="ambientMasterToggleBtn">⏹️ Stop Sound</button>
             </div>
-            <p class="ambient-card-sub">Layer calming procedural soundscapes & mask noise while in flow state</p>
+            <p class="ambient-card-sub">Layer calming procedural soundscapes &amp; mask noise while in flow state</p>
             
             <div class="ambient-tiles-grid">
               <button class="ambient-tile-btn" data-sound="rain">
@@ -323,6 +352,26 @@
               <button class="ambient-tile-btn" data-sound="brown">
                 <span class="ambient-tile-icon">🌌</span>
                 <span class="ambient-tile-label">Deep Noise</span>
+                <span class="ambient-eq-bars"><span class="eq-b1"></span><span class="eq-b2"></span><span class="eq-b3"></span></span>
+              </button>
+              <button class="ambient-tile-btn" data-sound="campfire">
+                <span class="ambient-tile-icon">🔥</span>
+                <span class="ambient-tile-label">Campfire</span>
+                <span class="ambient-eq-bars"><span class="eq-b1"></span><span class="eq-b2"></span><span class="eq-b3"></span></span>
+              </button>
+              <button class="ambient-tile-btn" data-sound="binaural">
+                <span class="ambient-tile-icon">🧠</span>
+                <span class="ambient-tile-label">40Hz Flow</span>
+                <span class="ambient-eq-bars"><span class="eq-b1"></span><span class="eq-b2"></span><span class="eq-b3"></span></span>
+              </button>
+              <button class="ambient-tile-btn" data-sound="whitenoise">
+                <span class="ambient-tile-icon">⚡</span>
+                <span class="ambient-tile-label">White Noise</span>
+                <span class="ambient-eq-bars"><span class="eq-b1"></span><span class="eq-b2"></span><span class="eq-b3"></span></span>
+              </button>
+              <button class="ambient-tile-btn" data-sound="zenbells">
+                <span class="ambient-tile-icon">🎐</span>
+                <span class="ambient-tile-label">Zen Chimes</span>
                 <span class="ambient-eq-bars"><span class="eq-b1"></span><span class="eq-b2"></span><span class="eq-b3"></span></span>
               </button>
             </div>
@@ -510,6 +559,13 @@
         <div class="form-group">
           <label for="routineNotesInput">Notes / Checklist (Optional)</label>
           <input type="text" id="routineNotesInput" placeholder="e.g., Drink water, avoid phone, prepare desk">
+        </div>
+
+        <div class="form-group checkbox-row">
+          <label class="checkbox-label" for="routineAlarmToggle">
+            <input type="checkbox" id="routineAlarmToggle">
+            <span>⏰ Trigger Alarm when this activity starts</span>
+          </label>
         </div>
 
         <div class="modal-actions">
@@ -775,6 +831,205 @@
 
       <div class="modal-actions">
         <button type="button" class="btn btn-primary btn-block" id="closeScratchpadDoneBtn">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. Customize Focus Session & Flow Modal -->
+  <div class="modal-backdrop" id="customFocusModal">
+    <div class="modal-sheet modal-sheet-lg">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-pill">FOCUS WORKFLOW</span>
+          <h3>Customize Focus Mode</h3>
+        </div>
+        <button class="modal-close-btn" id="closeCustomFocusModalBtn">&times;</button>
+      </div>
+      <p class="modal-caption-text">Tailor your focus duration, interval rounds, and task intention.</p>
+
+      <!-- Quick Preset Cards -->
+      <div class="focus-preset-grid">
+        <button type="button" class="focus-preset-card" data-focus="15" data-break="3" data-rounds="3" data-title="Rapid Sprint">
+          <span class="preset-emoji">⚡</span>
+          <span class="preset-name">Sprint</span>
+          <span class="preset-desc">15m Focus / 3m Break</span>
+        </button>
+        <button type="button" class="focus-preset-card active" data-focus="25" data-break="5" data-rounds="4" data-title="Classic Pomodoro">
+          <span class="preset-emoji">🍅</span>
+          <span class="preset-name">Pomodoro</span>
+          <span class="preset-desc">25m Focus / 5m Break</span>
+        </button>
+        <button type="button" class="focus-preset-card" data-focus="45" data-break="10" data-rounds="3" data-title="Deep Engineering">
+          <span class="preset-emoji">🧠</span>
+          <span class="preset-name">Deep Work</span>
+          <span class="preset-desc">45m Focus / 10m Break</span>
+        </button>
+        <button type="button" class="focus-preset-card" data-focus="60" data-break="15" data-rounds="2" data-title="Flow State">
+          <span class="preset-emoji">🌊</span>
+          <span class="preset-name">Flow State</span>
+          <span class="preset-desc">60m Focus / 15m Break</span>
+        </button>
+      </div>
+
+      <form id="customFocusForm">
+        <div class="form-group">
+          <label for="customFocusDurationInput">Focus Duration (Minutes: 1 - 180)</label>
+          <div class="range-input-wrap">
+            <input type="range" id="customFocusDurationSlider" min="1" max="120" value="25" class="custom-range-slider">
+            <input type="number" id="customFocusDurationInput" min="1" max="180" value="25" class="number-input-pill">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="customBreakDurationInput">Short Break (Mins)</label>
+            <input type="number" id="customBreakDurationInput" min="1" max="30" value="5">
+          </div>
+          <div class="form-group flex-1">
+            <label for="customRoundsInput">Rounds / Sessions</label>
+            <input type="number" id="customRoundsInput" min="1" max="12" value="4">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="customFocusIntentionInput">Current Focus Intention / Task</label>
+          <input type="text" id="customFocusIntentionInput" placeholder="e.g. Build Android Feature, Machine Learning Notes, HIIT" maxlength="60">
+        </div>
+
+        <div class="modal-actions-row">
+          <button type="button" class="btn btn-ghost flex-1" id="cancelCustomFocusBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary flex-1" id="saveCustomFocusBtn">Apply &amp; Set Timer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 9. Fullscreen Zen Deep Focus Overlay -->
+  <div class="zen-focus-overlay" id="zenFocusOverlay">
+    <div class="zen-overlay-header">
+      <div class="zen-intention-pill" id="zenIntentionPill">
+        <span>🎯</span>
+        <span id="zenIntentionText">Deep Work &amp; Flow State</span>
+      </div>
+      <button class="zen-exit-btn" id="exitZenModeBtn" title="Exit Zen Mode">
+        ✕ Exit Zen
+      </button>
+    </div>
+
+    <div class="zen-orb-container">
+      <div class="zen-breathing-ring" id="zenBreathingRing"></div>
+      <div class="zen-orb-core">
+        <span class="zen-session-badge" id="zenSessionBadge">SESSION 1 OF 4</span>
+        <span class="zen-digits" id="zenDigits">25:00</span>
+        <span class="zen-status-msg" id="zenStatusMsg">Focusing... Eliminate distractions</span>
+      </div>
+    </div>
+
+    <!-- Zen Floating Controls -->
+    <div class="zen-controls-bar">
+      <button class="zen-control-btn secondary" id="zenResetBtn" title="Reset">↺</button>
+      <button class="zen-control-btn primary" id="zenPlayBtn" title="Start/Pause">▶</button>
+      <button class="zen-control-btn secondary" id="zenSkipBtn" title="Next Session">⏭</button>
+    </div>
+
+    <!-- Zen Bottom Ambient Bar -->
+    <div class="zen-ambient-bar">
+      <span class="zen-ambient-icon" id="zenAmbientIcon">🎧</span>
+      <span class="zen-ambient-label" id="zenAmbientLabel">Ambient Audio: Rain</span>
+      <button class="btn btn-ghost btn-xs" id="zenToggleAmbientBtn">Toggle Sound</button>
+    </div>
+  </div>
+
+  <!-- 10. Alarms & Wake Schedules Manager Modal -->
+  <div class="modal-backdrop" id="alarmsModal">
+    <div class="modal-sheet modal-sheet-lg">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-pill">WAKE &amp; ROUTINE</span>
+          <h3>⏰ Alarms &amp; Schedules</h3>
+        </div>
+        <button class="modal-close-btn" id="closeAlarmsModalBtn">&times;</button>
+      </div>
+      <p class="modal-caption-text">Set loud persistent alarms for your morning rise, focus rounds, and sleep wind-down.</p>
+
+      <!-- Add New Alarm Form Accordion -->
+      <div class="new-alarm-box">
+        <h4 class="new-alarm-heading">+ Set New Alarm</h4>
+        <form id="newAlarmForm">
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="newAlarmTimeInput">Alarm Time *</label>
+              <input type="time" id="newAlarmTimeInput" required value="06:30" class="alarm-time-picker">
+            </div>
+            <div class="form-group flex-1">
+              <label for="newAlarmRepeatInput">Repeat</label>
+              <select id="newAlarmRepeatInput">
+                <option value="everyday" selected>🔁 Every Day</option>
+                <option value="weekdays">💼 Weekdays (Mon-Fri)</option>
+                <option value="weekends">🌴 Weekends (Sat-Sun)</option>
+                <option value="once">⚡ Once Today</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="newAlarmLabelInput">Alarm Label / Activity</label>
+              <input type="text" id="newAlarmLabelInput" placeholder="e.g. Morning Rise, Evening Study" required maxlength="50">
+            </div>
+            <div class="form-group flex-1">
+              <label for="newAlarmSoundInput">Ringtone Sound</label>
+              <select id="newAlarmSoundInput">
+                <option value="digital" selected>⏰ Digital Alarm Beep</option>
+                <option value="zen">🧘 Zen Rising Bells</option>
+                <option value="wakeup">⚡ Energetic Wakeup</option>
+                <option value="radar">📡 Radar Pulse Alert</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="new-alarm-actions">
+            <button type="button" class="btn btn-ghost btn-sm" id="testAlarmSoundBtn">🔊 Preview Sound</button>
+            <button type="submit" class="btn btn-primary btn-sm" id="saveNewAlarmBtn">+ Add Alarm</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Configured Alarms List -->
+      <div class="alarms-list-header">
+        <h4>Configured Alarms (<span id="activeAlarmsCount">0</span>)</h4>
+      </div>
+      <div class="alarms-list" id="alarmsList">
+        <!-- Dynamically rendered via app.js -->
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-primary btn-block" id="closeAlarmsDoneBtn">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11. Active Alarm Ringing Fullscreen Attention Modal -->
+  <div class="modal-backdrop alarm-ringing-backdrop" id="activeAlarmRingModal">
+    <div class="alarm-ringing-card">
+      <div class="alarm-shockwave-rings">
+        <div class="shockwave ring-1"></div>
+        <div class="shockwave ring-2"></div>
+        <div class="shockwave ring-3"></div>
+        <div class="alarm-bell-icon">🔔</div>
+      </div>
+
+      <span class="alarm-ringing-live-clock" id="alarmRingLiveClock">07:00:00</span>
+      <h2 class="alarm-ringing-title" id="alarmRingTitle">Morning Sunlight &amp; Rise</h2>
+      <p class="alarm-ringing-quote" id="alarmRingQuote">"Wake up with determination, go to bed with satisfaction!"</p>
+
+      <div class="alarm-ringing-actions">
+        <button class="btn btn-secondary btn-lg flex-1" id="snoozeAlarmBtn">
+          💤 Snooze (+5m)
+        </button>
+        <button class="btn btn-primary btn-lg flex-1 alarm-dismiss-btn" id="dismissAlarmBtn">
+          ✓ Dismiss Alarm
+        </button>
       </div>
     </div>
   </div>

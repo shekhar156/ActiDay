@@ -199,7 +199,33 @@
       current: null,
       volume: 0.65,
       autoSync: true
-    }
+    },
+    focusConfig: {
+      focusMins: 25,
+      shortBreakMins: 5,
+      longBreakMins: 15,
+      rounds: 4,
+      intention: 'Deep Work & Flow',
+      finishSound: 'bowl'
+    },
+    alarms: [
+      {
+        id: 'a1',
+        time: '06:30',
+        label: 'Morning Sunlight & Rise',
+        repeat: 'everyday',
+        sound: 'zen',
+        enabled: true
+      },
+      {
+        id: 'a2',
+        time: '14:00',
+        label: 'Afternoon Deep Focus Session',
+        repeat: 'weekdays',
+        sound: 'digital',
+        enabled: true
+      }
+    ]
   };
 
   let state = loadState();
@@ -212,6 +238,8 @@
         const merged = { ...DEFAULT_DATA, ...parsed };
         if (!merged.gamification) merged.gamification = JSON.parse(JSON.stringify(DEFAULT_DATA.gamification));
         if (!merged.ambientSound) merged.ambientSound = JSON.parse(JSON.stringify(DEFAULT_DATA.ambientSound));
+        if (!merged.focusConfig) merged.focusConfig = JSON.parse(JSON.stringify(DEFAULT_DATA.focusConfig));
+        if (!merged.alarms) merged.alarms = JSON.parse(JSON.stringify(DEFAULT_DATA.alarms));
         if (typeof merged.scratchpad === 'undefined') merged.scratchpad = '';
         return merged;
       }
@@ -316,28 +344,201 @@
     } catch (e) {}
   }
 
-  // Resonant Gong / Meditation Bell for Pomodoro
-  function playTimerBell() {
+  // Customizable Finish Sounds (Tibetan Singing Bowl, Digital Alarm, Crystal Marimba, 8-Bit Fanfare, Radar Pulse)
+  function playFinishSound(soundType) {
     if (!state.settings.alarmBellEnabled) return;
     try {
       initAudio();
       if (!audioCtx) return;
       const start = audioCtx.currentTime;
-      const harmonics = [440, 880, 1320, 1760];
-      harmonics.forEach((freq, i) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = i === 0 ? 'sine' : 'triangle';
-        osc.frequency.value = freq;
-        const vol = 0.25 / (i + 1);
-        gain.gain.setValueAtTime(vol, start);
-        gain.gain.exponentialRampToValueAtTime(0.0001, start + 2.5);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(start);
-        osc.stop(start + 2.5);
-      });
+      const type = soundType || (state.focusConfig ? state.focusConfig.finishSound : 'bowl') || 'bowl';
+
+      if (type === 'digital') {
+        // Electronic double-pulse alarm beep
+        [0, 0.12, 0.35, 0.47].forEach(offset => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(1046.5, start + offset);
+          gain.gain.setValueAtTime(0.2, start + offset);
+          gain.gain.exponentialRampToValueAtTime(0.001, start + offset + 0.08);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(start + offset);
+          osc.stop(start + offset + 0.08);
+        });
+      } else if (type === 'marimba') {
+        // Crystal marimba pentatonic chime
+        const notes = [523.25, 659.25, 783.99, 987.77, 1046.50];
+        notes.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, start + idx * 0.1);
+          gain.gain.setValueAtTime(0.22, start + idx * 0.1);
+          gain.gain.exponentialRampToValueAtTime(0.001, start + idx * 0.1 + 0.4);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(start + idx * 0.1);
+          osc.stop(start + idx * 0.1 + 0.42);
+        });
+      } else if (type === 'fanfare') {
+        // 8-Bit victory fanfare
+        const notes = [659.25, 659.25, 659.25, 523.25, 659.25, 783.99];
+        const times = [0, 0.12, 0.24, 0.38, 0.50, 0.65];
+        notes.forEach((freq, i) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(freq, start + times[i]);
+          gain.gain.setValueAtTime(0.18, start + times[i]);
+          gain.gain.exponentialRampToValueAtTime(0.001, start + times[i] + 0.14);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(start + times[i]);
+          osc.stop(start + times[i] + 0.15);
+        });
+      } else if (type === 'radar') {
+        // High-tech radar sonar ping
+        [0, 0.25].forEach(offset => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(1480, start + offset);
+          osc.frequency.exponentialRampToValueAtTime(580, start + offset + 0.22);
+          gain.gain.setValueAtTime(0.28, start + offset);
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + offset + 0.22);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(start + offset);
+          osc.stop(start + offset + 0.23);
+        });
+      } else {
+        // Default: Tibetan Singing Bowl / Gong
+        const harmonics = [440, 880, 1320, 1760];
+        harmonics.forEach((freq, i) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = i === 0 ? 'sine' : 'triangle';
+          osc.frequency.value = freq;
+          const vol = 0.25 / (i + 1);
+          gain.gain.setValueAtTime(vol, start);
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + 2.5);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(start);
+          osc.stop(start + 2.5);
+        });
+      }
     } catch (e) {}
+  }
+
+  function playTimerBell() {
+    playFinishSound();
+  }
+
+  // Active Persistent Alarm Synthesizer Loop (Digital Beep, Zen Bells, Energetic Wakeup, Radar Pulse)
+  let activeAlarmInterval = null;
+  let isAlarmRinging = false;
+  let activeAlarmVibrateInterval = null;
+
+  function startAlarmSound(soundType = 'digital') {
+    initAudio();
+    stopAlarmSound();
+    isAlarmRinging = true;
+
+    function playBurst() {
+      if (!isAlarmRinging || !audioCtx) return;
+      try {
+        const now = audioCtx.currentTime;
+        if (soundType === 'zen') {
+          // Zen rising bells
+          const notes = [440, 554.37, 659.25, 880];
+          notes.forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.18);
+            gain.gain.setValueAtTime(0.28, now + idx * 0.18);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.18 + 0.8);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + idx * 0.18);
+            osc.stop(now + idx * 0.18 + 0.85);
+          });
+        } else if (soundType === 'wakeup') {
+          // Energetic Wakeup fanfare
+          const notes = [587.33, 739.99, 880, 1174.66];
+          notes.forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+            gain.gain.setValueAtTime(0.2, now + idx * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.12 + 0.25);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + idx * 0.12);
+            osc.stop(now + idx * 0.12 + 0.26);
+          });
+        } else if (soundType === 'radar') {
+          [0, 0.22].forEach(offset => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1500, now + offset);
+            osc.frequency.exponentialRampToValueAtTime(600, now + offset + 0.2);
+            gain.gain.setValueAtTime(0.35, now + offset);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.2);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + offset);
+            osc.stop(now + offset + 0.22);
+          });
+        } else {
+          // Classic Digital Alarm Beep (Loud repeating pulse)
+          [0, 0.12, 0.24, 0.36].forEach(offset => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(1200, now + offset);
+            gain.gain.setValueAtTime(0.3, now + offset);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.08);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + offset);
+            osc.stop(now + offset + 0.08);
+          });
+        }
+      } catch (e) {}
+    }
+
+    playBurst();
+    activeAlarmInterval = setInterval(playBurst, soundType === 'zen' ? 1800 : 1200);
+
+    // Continuous haptic vibration pattern
+    if ('vibrate' in navigator && state.settings.vibrationEnabled) {
+      try { navigator.vibrate([400, 200, 400, 200, 600]); } catch (e) {}
+      activeAlarmVibrateInterval = setInterval(() => {
+        if (!isAlarmRinging) return;
+        try { navigator.vibrate([400, 200, 400, 200, 600]); } catch (e) {}
+      }, 1800);
+    }
+  }
+
+  function stopAlarmSound() {
+    isAlarmRinging = false;
+    if (activeAlarmInterval) {
+      clearInterval(activeAlarmInterval);
+      activeAlarmInterval = null;
+    }
+    if (activeAlarmVibrateInterval) {
+      clearInterval(activeAlarmVibrateInterval);
+      activeAlarmVibrateInterval = null;
+    }
+    if ('vibrate' in navigator) {
+      try { navigator.vibrate(0); } catch (e) {}
+    }
   }
 
   // Metronome tick
@@ -611,6 +812,117 @@
           } catch (e) {}
         }, 1500);
 
+      } else if (type === 'campfire') {
+        const buffer = createNoiseBuffer(5, 'brown');
+        ambientSource = audioCtx.createBufferSource();
+        ambientSource.buffer = buffer;
+        ambientSource.loop = true;
+
+        ambientFilter = audioCtx.createBiquadFilter();
+        ambientFilter.type = 'lowpass';
+        ambientFilter.frequency.setValueAtTime(550, now);
+        ambientFilter.Q.setValueAtTime(1.0, now);
+
+        ambientSource.connect(ambientFilter);
+        ambientFilter.connect(ambientGain);
+        ambientSource.start(now);
+
+        // Crackling embers and snaps
+        ambientAuxInterval = setInterval(() => {
+          if (!isAmbientPlaying || !audioCtx) return;
+          if (Math.random() > 0.38) return;
+          try {
+            const snapTime = audioCtx.currentTime;
+            const snapOsc = audioCtx.createOscillator();
+            const snapGain = audioCtx.createGain();
+            snapOsc.type = 'square';
+            const freq = 1200 + Math.random() * 2400;
+            snapOsc.frequency.setValueAtTime(freq, snapTime);
+            snapGain.gain.setValueAtTime(targetVol * 0.35, snapTime);
+            snapGain.gain.exponentialRampToValueAtTime(0.0001, snapTime + 0.02);
+            snapOsc.connect(snapGain);
+            snapGain.connect(ambientGain);
+            snapOsc.start(snapTime);
+            snapOsc.stop(snapTime + 0.025);
+          } catch (e) {}
+        }, 220);
+
+      } else if (type === 'binaural') {
+        // True 40Hz Gamma wave focus tone: Left 216Hz, Right 256Hz -> Delta 40Hz
+        const oscL = audioCtx.createOscillator();
+        const oscR = audioCtx.createOscillator();
+        oscL.type = 'sine';
+        oscR.type = 'sine';
+        oscL.frequency.setValueAtTime(216, now);
+        oscR.frequency.setValueAtTime(256, now);
+
+        const merger = audioCtx.createChannelMerger(2);
+        oscL.connect(merger, 0, 0);
+        oscR.connect(merger, 0, 1);
+        merger.connect(ambientGain);
+
+        oscL.start(now);
+        oscR.start(now);
+
+        ambientSource = {
+          stop: () => {
+            try { oscL.stop(); oscR.stop(); } catch(e){}
+          },
+          disconnect: () => {
+            try { oscL.disconnect(); oscR.disconnect(); merger.disconnect(); } catch(e){}
+          }
+        };
+
+      } else if (type === 'whitenoise') {
+        const buffer = createNoiseBuffer(5, 'white');
+        ambientSource = audioCtx.createBufferSource();
+        ambientSource.buffer = buffer;
+        ambientSource.loop = true;
+
+        ambientFilter = audioCtx.createBiquadFilter();
+        ambientFilter.type = 'lowpass';
+        ambientFilter.frequency.setValueAtTime(3400, now);
+        ambientFilter.Q.setValueAtTime(0.7, now);
+
+        ambientSource.connect(ambientFilter);
+        ambientFilter.connect(ambientGain);
+        ambientSource.start(now);
+
+      } else if (type === 'zenbells') {
+        const buffer = createNoiseBuffer(6, 'pink');
+        ambientSource = audioCtx.createBufferSource();
+        ambientSource.buffer = buffer;
+        ambientSource.loop = true;
+
+        ambientFilter = audioCtx.createBiquadFilter();
+        ambientFilter.type = 'lowpass';
+        ambientFilter.frequency.setValueAtTime(450, now);
+        ambientFilter.Q.setValueAtTime(0.6, now);
+
+        ambientSource.connect(ambientFilter);
+        ambientFilter.connect(ambientGain);
+        ambientSource.start(now);
+
+        const bellFreqs = [1046.5, 1318.5, 1567.9, 2093.0, 2637.0];
+        ambientAuxInterval = setInterval(() => {
+          if (!isAmbientPlaying || !audioCtx) return;
+          if (Math.random() > 0.45) return;
+          try {
+            const chimeTime = audioCtx.currentTime;
+            const chimeOsc = audioCtx.createOscillator();
+            const chimeGain = audioCtx.createGain();
+            const f = bellFreqs[Math.floor(Math.random() * bellFreqs.length)];
+            chimeOsc.type = 'sine';
+            chimeOsc.frequency.setValueAtTime(f, chimeTime);
+            chimeGain.gain.setValueAtTime(targetVol * 0.3, chimeTime);
+            chimeGain.gain.exponentialRampToValueAtTime(0.0001, chimeTime + 1.8);
+            chimeOsc.connect(chimeGain);
+            chimeGain.connect(ambientGain);
+            chimeOsc.start(chimeTime);
+            chimeOsc.stop(chimeTime + 1.9);
+          } catch (e) {}
+        }, 1300);
+
       } else { // 'brown'
         const buffer = createNoiseBuffer(5, 'brown');
         ambientSource = audioCtx.createBufferSource();
@@ -874,7 +1186,62 @@
     breathingCycleLabel: document.getElementById('breathingCycleLabel'),
     breathingGuideTip: document.getElementById('breathingGuideTip'),
     resetBreathingBtn: document.getElementById('resetBreathingBtn'),
-    toggleBreathingBtn: document.getElementById('toggleBreathingBtn')
+    toggleBreathingBtn: document.getElementById('toggleBreathingBtn'),
+
+    // Routine Alarm
+    routineAlarmToggle: document.getElementById('routineAlarmToggle'),
+
+    // Focus Custom & Zen Mode
+    openCustomFocusModalBtn: document.getElementById('openCustomFocusModalBtn'),
+    enterZenModeBtn: document.getElementById('enterZenModeBtn'),
+    timerCustomModeBtn: document.getElementById('timerCustomModeBtn'),
+    customModeBadgeTime: document.getElementById('customModeBadgeTime'),
+    focusIntentionDisplay: document.getElementById('focusIntentionDisplay'),
+    timerFinishSoundSelect: document.getElementById('timerFinishSoundSelect'),
+    testFinishSoundBtn: document.getElementById('testFinishSoundBtn'),
+    customFocusModal: document.getElementById('customFocusModal'),
+    closeCustomFocusModalBtn: document.getElementById('closeCustomFocusModalBtn'),
+    cancelCustomFocusBtn: document.getElementById('cancelCustomFocusBtn'),
+    customFocusForm: document.getElementById('customFocusForm'),
+    customFocusDurationSlider: document.getElementById('customFocusDurationSlider'),
+    customFocusDurationInput: document.getElementById('customFocusDurationInput'),
+    customBreakDurationInput: document.getElementById('customBreakDurationInput'),
+    customRoundsInput: document.getElementById('customRoundsInput'),
+    customFocusIntentionInput: document.getElementById('customFocusIntentionInput'),
+    focusPresetCards: document.querySelectorAll('.focus-preset-card'),
+    zenFocusOverlay: document.getElementById('zenFocusOverlay'),
+    exitZenModeBtn: document.getElementById('exitZenModeBtn'),
+    zenDigits: document.getElementById('zenDigits'),
+    zenSessionBadge: document.getElementById('zenSessionBadge'),
+    zenStatusMsg: document.getElementById('zenStatusMsg'),
+    zenIntentionText: document.getElementById('zenIntentionText'),
+    zenPlayBtn: document.getElementById('zenPlayBtn'),
+    zenResetBtn: document.getElementById('zenResetBtn'),
+    zenSkipBtn: document.getElementById('zenSkipBtn'),
+    zenAmbientIcon: document.getElementById('zenAmbientIcon'),
+    zenAmbientLabel: document.getElementById('zenAmbientLabel'),
+    zenToggleAmbientBtn: document.getElementById('zenToggleAmbientBtn'),
+
+    // Alarms System
+    alarmHeaderBtn: document.getElementById('alarmHeaderBtn'),
+    alarmActiveDot: document.getElementById('alarmActiveDot'),
+    alarmsModal: document.getElementById('alarmsModal'),
+    closeAlarmsModalBtn: document.getElementById('closeAlarmsModalBtn'),
+    closeAlarmsDoneBtn: document.getElementById('closeAlarmsDoneBtn'),
+    newAlarmForm: document.getElementById('newAlarmForm'),
+    newAlarmTimeInput: document.getElementById('newAlarmTimeInput'),
+    newAlarmRepeatInput: document.getElementById('newAlarmRepeatInput'),
+    newAlarmLabelInput: document.getElementById('newAlarmLabelInput'),
+    newAlarmSoundInput: document.getElementById('newAlarmSoundInput'),
+    testAlarmSoundBtn: document.getElementById('testAlarmSoundBtn'),
+    activeAlarmsCount: document.getElementById('activeAlarmsCount'),
+    alarmsList: document.getElementById('alarmsList'),
+    activeAlarmRingModal: document.getElementById('activeAlarmRingModal'),
+    alarmRingLiveClock: document.getElementById('alarmRingLiveClock'),
+    alarmRingTitle: document.getElementById('alarmRingTitle'),
+    alarmRingQuote: document.getElementById('alarmRingQuote'),
+    snoozeAlarmBtn: document.getElementById('snoozeAlarmBtn'),
+    dismissAlarmBtn: document.getElementById('dismissAlarmBtn')
   };
 
   // State filters
@@ -917,6 +1284,201 @@
 
     // Update active routine analysis
     evaluateActiveRoutine(now);
+
+    // Check system & routine alarms
+    checkAlarms(now);
+  }
+
+  // ==========================================================================
+  // ALARMS ENGINE & REAL-TIME SCHEDULER
+  // ==========================================================================
+  let lastAlarmFiredKey = null;
+
+  function checkAlarms(now) {
+    const currentHour = String(now.getHours()).padStart(2, '0');
+    const currentMin = String(now.getMinutes()).padStart(2, '0');
+    const currentTimeStr = `${currentHour}:${currentMin}`;
+    const dayOfWeek = now.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    const isWeekday = !isWeekend;
+
+    // Header badge dot: shines green if enabled alarms or routine alarms exist
+    const hasEnabledAlarms = (state.alarms && state.alarms.some(a => a.enabled)) ||
+                             (state.routines && state.routines.some(r => r.alarm));
+    if (el.alarmActiveDot) {
+      if (hasEnabledAlarms) el.alarmActiveDot.classList.add('active');
+      else el.alarmActiveDot.classList.remove('active');
+    }
+
+    if (el.alarmRingLiveClock) {
+      const secs = String(now.getSeconds()).padStart(2, '0');
+      el.alarmRingLiveClock.textContent = `${currentTimeStr}:${secs}`;
+    }
+
+    // Guard against re-triggering during the same minute
+    if (lastAlarmFiredKey === currentTimeStr) return;
+
+    // 1. Check custom alarms list
+    if (state.alarms && state.alarms.length > 0) {
+      for (const alarm of state.alarms) {
+        if (!alarm.enabled) continue;
+        if (alarm.time === currentTimeStr) {
+          let shouldFire = false;
+          if (alarm.repeat === 'everyday') shouldFire = true;
+          else if (alarm.repeat === 'weekdays' && isWeekday) shouldFire = true;
+          else if (alarm.repeat === 'weekends' && isWeekend) shouldFire = true;
+          else if (alarm.repeat === 'once') {
+            shouldFire = true;
+            alarm.enabled = false;
+            saveState();
+            renderAlarms();
+          }
+
+          if (shouldFire) {
+            lastAlarmFiredKey = currentTimeStr;
+            triggerAlarmAlert(alarm.label || 'Daily Alarm', alarm.sound || 'digital');
+            return;
+          }
+        }
+      }
+    }
+
+    // 2. Check routine activities with start-time alarms
+    if (state.routines && state.routines.length > 0) {
+      for (const r of state.routines) {
+        if (r.alarm && r.startTime === currentTimeStr) {
+          lastAlarmFiredKey = currentTimeStr;
+          triggerAlarmAlert(`Routine Started: ${r.title}`, 'zen');
+          return;
+        }
+      }
+    }
+  }
+
+  function triggerAlarmAlert(title, soundType = 'digital') {
+    if (el.alarmRingTitle) el.alarmRingTitle.textContent = title;
+    if (el.activeAlarmRingModal) el.activeAlarmRingModal.classList.add('open');
+
+    startAlarmSound(soundType);
+
+    dispatchSystemNotification(
+      `⏰ ALARM: ${title}`,
+      `Time for ${title}! Tap to snooze or dismiss.`,
+      'actiday-alarm'
+    );
+  }
+
+  function snoozeCurrentAlarm() {
+    stopAlarmSound();
+    if (el.activeAlarmRingModal) el.activeAlarmRingModal.classList.remove('open');
+
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 5);
+    const snHour = String(now.getHours()).padStart(2, '0');
+    const snMin = String(now.getMinutes()).padStart(2, '0');
+    const snTime = `${snHour}:${snMin}`;
+
+    state.alarms.push({
+      id: 'snooze_' + Date.now(),
+      time: snTime,
+      label: 'Snoozed Reminder 💤',
+      repeat: 'once',
+      sound: 'digital',
+      enabled: true
+    });
+    saveState();
+    renderAlarms();
+    showToast(`Alarm snoozed until ${snTime} 💤`, 'normal');
+  }
+
+  function dismissCurrentAlarm() {
+    stopAlarmSound();
+    if (el.activeAlarmRingModal) el.activeAlarmRingModal.classList.remove('open');
+    awardXP(15, 'Alarm Acknowledged');
+    showToast('Alarm dismissed ✓ (+15 XP)', 'success');
+  }
+
+  function renderAlarms() {
+    if (!el.alarmsList) return;
+    el.alarmsList.innerHTML = '';
+
+    const list = state.alarms || [];
+    if (el.activeAlarmsCount) el.activeAlarmsCount.textContent = list.filter(a => a.enabled).length;
+
+    if (list.length === 0) {
+      el.alarmsList.innerHTML = `
+        <div style="text-align: center; padding: 22px; color: var(--text-muted); font-size: 0.85rem;">
+          <p style="font-size: 1.8rem; margin-bottom: 6px;">⏰</p>
+          <p>No active alarms set. Create one above to stay on schedule!</p>
+        </div>
+      `;
+      return;
+    }
+
+    list.forEach(alarm => {
+      const card = document.createElement('div');
+      card.className = `alarm-item-card ${alarm.enabled ? '' : 'is-disabled'}`;
+
+      const [h, m] = (alarm.time || '07:00').split(':').map(Number);
+      const period = h >= 12 ? 'PM' : 'AM';
+      const h12 = h % 12 === 0 ? 12 : h % 12;
+      const formatted12 = `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${period}`;
+
+      let repeatLabel = 'Every Day';
+      if (alarm.repeat === 'weekdays') repeatLabel = 'Mon-Fri';
+      if (alarm.repeat === 'weekends') repeatLabel = 'Sat-Sun';
+      if (alarm.repeat === 'once') repeatLabel = 'Once';
+
+      let soundLabel = 'Digital Beep';
+      if (alarm.sound === 'zen') soundLabel = 'Zen Bells';
+      if (alarm.sound === 'wakeup') soundLabel = 'Wakeup Fanfare';
+      if (alarm.sound === 'radar') soundLabel = 'Radar Pulse';
+
+      card.innerHTML = `
+        <div class="alarm-time-group">
+          <span class="alarm-time-digits">${formatted12}</span>
+          <span class="alarm-label-text">${escapeHTML(alarm.label)}</span>
+          <div class="alarm-meta-tags">
+            <span class="alarm-tag">🔁 ${repeatLabel}</span>
+            <span class="alarm-tag">🔊 ${soundLabel}</span>
+          </div>
+        </div>
+        <div class="alarm-card-actions">
+          <label class="switch">
+            <input type="checkbox" class="toggle-alarm-checkbox" data-id="${alarm.id}" ${alarm.enabled ? 'checked' : ''}>
+            <span class="slider"></span>
+          </label>
+          <button class="del-alarm-btn" data-id="${alarm.id}" title="Delete alarm">🗑️</button>
+        </div>
+      `;
+
+      el.alarmsList.appendChild(card);
+    });
+
+    el.alarmsList.querySelectorAll('.toggle-alarm-checkbox').forEach(box => {
+      box.addEventListener('change', (e) => {
+        const id = e.target.getAttribute('data-id');
+        const alarm = state.alarms.find(a => a.id === id);
+        if (alarm) {
+          alarm.enabled = e.target.checked;
+          saveState();
+          renderAlarms();
+          playClickSound();
+          showToast(alarm.enabled ? 'Alarm enabled' : 'Alarm disabled');
+        }
+      });
+    });
+
+    el.alarmsList.querySelectorAll('.del-alarm-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        state.alarms = state.alarms.filter(a => a.id !== id);
+        saveState();
+        playClickSound();
+        renderAlarms();
+        showToast('Alarm removed');
+      });
+    });
   }
 
   function parseTimeToMinutes(timeStr) {
@@ -1061,6 +1623,7 @@
           <div class="routine-time-row">
             <span class="routine-time-text">${r.startTime} - ${r.endTime}</span>
             <span class="category-badge">${r.category}</span>
+            ${r.alarm ? '<span class="category-badge" style="color:#fbbf24; background:rgba(251, 191, 36, 0.15);" title="Alarm set">⏰ Alarm</span>' : ''}
           </div>
           <div class="routine-item-title">${escapeHTML(r.title)}</div>
         </div>
@@ -1147,6 +1710,7 @@
     el.routineStartTimeInput.value = '08:00';
     el.routineEndTimeInput.value = '09:00';
     el.routineEmojiInput.value = '⚡';
+    if (el.routineAlarmToggle) el.routineAlarmToggle.checked = false;
     el.routineModal.classList.add('open');
   }
 
@@ -1161,6 +1725,7 @@
     el.routineCategoryInput.value = r.category;
     el.routineEmojiInput.value = r.emoji;
     el.routineNotesInput.value = r.notes || '';
+    if (el.routineAlarmToggle) el.routineAlarmToggle.checked = !!r.alarm;
     document.getElementById('routineModalTitle').textContent = 'Edit Routine Activity';
     el.routineModal.classList.add('open');
   }
@@ -1179,6 +1744,7 @@
     const category = el.routineCategoryInput.value;
     const emoji = el.routineEmojiInput.value.trim() || '⚡';
     const notes = el.routineNotesInput.value.trim();
+    const hasAlarm = el.routineAlarmToggle ? el.routineAlarmToggle.checked : false;
 
     if (!title) return;
 
@@ -1192,6 +1758,7 @@
         r.category = category;
         r.emoji = emoji;
         r.notes = notes;
+        r.alarm = hasAlarm;
       }
       showToast('Activity updated');
     } else {
@@ -1204,6 +1771,7 @@
         category,
         emoji,
         notes,
+        alarm: hasAlarm,
         completed: false
       });
       showToast('Activity added to routine', 'success');
@@ -1599,22 +2167,27 @@
   });
 
   // ==========================================================================
-  // 8. TAB 4: FOCUS & POMODORO TIMER ENGINE
+  // 8. TAB 4: FOCUS & POMODORO TIMER ENGINE & ZEN MODE
   // ==========================================================================
   let timerDurationSecs = 25 * 60;
   let timerRemainingSecs = 25 * 60;
   let timerInterval = null;
   let isTimerRunning = false;
   let currentSession = 1;
-  const maxSessions = 4;
   const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * 110; // ~691.15
+
+  function getMaxSessions() {
+    return (state.focusConfig && state.focusConfig.rounds) ? state.focusConfig.rounds : 4;
+  }
 
   function updateTimerUI() {
     const mins = Math.floor(timerRemainingSecs / 60);
     const secs = timerRemainingSecs % 60;
     const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    const maxRounds = getMaxSessions();
 
     if (el.timerDigits) el.timerDigits.textContent = formatted;
+    if (el.zenDigits) el.zenDigits.textContent = formatted;
 
     const progressRatio = (timerDurationSecs - timerRemainingSecs) / timerDurationSecs;
     const offset = CIRCLE_CIRCUMFERENCE * (1 - progressRatio);
@@ -1625,9 +2198,25 @@
     if (el.timerPlayBtn) {
       el.timerPlayBtn.textContent = isTimerRunning ? '⏸' : '▶';
     }
+    if (el.zenPlayBtn) {
+      el.zenPlayBtn.textContent = isTimerRunning ? '⏸' : '▶';
+    }
 
-    if (el.timerSessionBadge) {
-      el.timerSessionBadge.textContent = `SESSION ${currentSession} OF ${maxSessions}`;
+    const sessionText = `SESSION ${currentSession} OF ${maxRounds}`;
+    if (el.timerSessionBadge) el.timerSessionBadge.textContent = sessionText;
+    if (el.zenSessionBadge) el.zenSessionBadge.textContent = sessionText;
+
+    const intention = (state.focusConfig && state.focusConfig.intention) ? state.focusConfig.intention : 'Deep Work & Flow';
+    if (el.focusIntentionDisplay) el.focusIntentionDisplay.textContent = `🎯 Focus: ${intention}`;
+    if (el.zenIntentionText) el.zenIntentionText.textContent = intention;
+
+    if (el.customModeBadgeTime && state.focusConfig) {
+      el.customModeBadgeTime.textContent = `${state.focusConfig.focusMins}m`;
+    }
+
+    if (el.zenAmbientLabel) {
+      const curSnd = (state.ambientSound && state.ambientSound.current) ? state.ambientSound.current.toUpperCase() : 'NONE';
+      el.zenAmbientLabel.textContent = `Ambient Audio: ${curSnd}`;
     }
   }
 
@@ -1636,7 +2225,9 @@
     initAudio();
     isTimerRunning = true;
     updateTimerUI();
-    if (el.timerSubStatus) el.timerSubStatus.textContent = 'Focusing... Stay in flow';
+    const statusText = 'Focusing... Stay in flow';
+    if (el.timerSubStatus) el.timerSubStatus.textContent = statusText;
+    if (el.zenStatusMsg) el.zenStatusMsg.textContent = statusText;
 
     // Auto-sync ambient soundscape if configured
     if (state.ambientSound && state.ambientSound.autoSync && state.ambientSound.current && !isAmbientPlaying) {
@@ -1659,7 +2250,9 @@
     isTimerRunning = false;
     clearInterval(timerInterval);
     updateTimerUI();
-    if (el.timerSubStatus) el.timerSubStatus.textContent = 'Paused';
+    const pausedText = 'Paused';
+    if (el.timerSubStatus) el.timerSubStatus.textContent = pausedText;
+    if (el.zenStatusMsg) el.zenStatusMsg.textContent = pausedText;
 
     if (state.ambientSound && state.ambientSound.autoSync && isAmbientPlaying) {
       stopAmbientSound(0.4);
@@ -1670,7 +2263,9 @@
     pauseTimer();
     timerRemainingSecs = timerDurationSecs;
     updateTimerUI();
-    if (el.timerSubStatus) el.timerSubStatus.textContent = 'Ready to focus';
+    const readyText = 'Ready to focus';
+    if (el.timerSubStatus) el.timerSubStatus.textContent = readyText;
+    if (el.zenStatusMsg) el.zenStatusMsg.textContent = readyText;
 
     if (state.ambientSound && state.ambientSound.autoSync && isAmbientPlaying) {
       stopAmbientSound(0.4);
@@ -1679,7 +2274,8 @@
 
   function finishTimer() {
     pauseTimer();
-    playTimerBell();
+    const chosenSound = state.focusConfig ? state.focusConfig.finishSound : 'bowl';
+    playFinishSound(chosenSound);
     triggerVibrate([200, 100, 300, 100, 400]);
 
     if (state.ambientSound && state.ambientSound.autoSync && isAmbientPlaying) {
@@ -1692,29 +2288,37 @@
     state.analytics.sessionsCompleted += 1;
     saveState();
 
-    currentSession = (currentSession % maxSessions) + 1;
+    const maxRounds = getMaxSessions();
+    currentSession = (currentSession % maxRounds) + 1;
     awardXP(50, 'Focus Session Logged');
     showToast(`🔔 Session complete! Logged ${minutesAdded} focus mins`, 'success');
     dispatchSystemNotification(
       '⏰ Focus Round Complete! (+50 XP)',
-      `Awesome job! Logged ${minutesAdded} minutes of deep focus. Take a 5-minute break.`,
+      `Awesome job! Logged ${minutesAdded} minutes of deep focus. Take a break.`,
       'actiday-timer'
     );
 
     timerRemainingSecs = timerDurationSecs;
     updateTimerUI();
-    if (el.timerSubStatus) el.timerSubStatus.textContent = 'Session complete! Take a breather';
+    const doneText = 'Session complete! Take a breather';
+    if (el.timerSubStatus) el.timerSubStatus.textContent = doneText;
+    if (el.zenStatusMsg) el.zenStatusMsg.textContent = doneText;
     renderAnalytics();
   }
 
   if (el.timerPlayBtn) {
     el.timerPlayBtn.addEventListener('click', () => {
       playClickSound();
-      if (isTimerRunning) {
-        pauseTimer();
-      } else {
-        startTimer();
-      }
+      if (isTimerRunning) pauseTimer();
+      else startTimer();
+    });
+  }
+
+  if (el.zenPlayBtn) {
+    el.zenPlayBtn.addEventListener('click', () => {
+      playClickSound();
+      if (isTimerRunning) pauseTimer();
+      else startTimer();
     });
   }
 
@@ -1725,10 +2329,28 @@
     });
   }
 
+  if (el.zenResetBtn) {
+    el.zenResetBtn.addEventListener('click', () => {
+      playClickSound();
+      resetTimer();
+    });
+  }
+
   if (el.timerSkipBtn) {
     el.timerSkipBtn.addEventListener('click', () => {
       playClickSound();
-      currentSession = (currentSession % maxSessions) + 1;
+      const maxRounds = getMaxSessions();
+      currentSession = (currentSession % maxRounds) + 1;
+      resetTimer();
+      showToast(`Skipped to session ${currentSession}`);
+    });
+  }
+
+  if (el.zenSkipBtn) {
+    el.zenSkipBtn.addEventListener('click', () => {
+      playClickSound();
+      const maxRounds = getMaxSessions();
+      currentSession = (currentSession % maxRounds) + 1;
       resetTimer();
       showToast(`Skipped to session ${currentSession}`);
     });
@@ -1739,8 +2361,14 @@
       playClickSound();
       el.timerModeBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      const durationMins = parseInt(btn.getAttribute('data-duration'), 10) || 25;
-      timerDurationSecs = durationMins * 60;
+      const mode = btn.getAttribute('data-mode');
+      if (mode === 'customConfig') {
+        const customMins = (state.focusConfig && state.focusConfig.focusMins) ? state.focusConfig.focusMins : 45;
+        timerDurationSecs = customMins * 60;
+      } else {
+        const durationMins = parseInt(btn.getAttribute('data-duration'), 10) || 25;
+        timerDurationSecs = durationMins * 60;
+      }
       resetTimer();
     });
   });
@@ -1763,6 +2391,158 @@
     el.timerTickToggle.addEventListener('change', (e) => {
       state.settings.metronomeEnabled = e.target.checked;
       saveState();
+    });
+  }
+
+  // Finish Alarm Sound Picker & Preview
+  if (el.timerFinishSoundSelect) {
+    el.timerFinishSoundSelect.value = (state.focusConfig && state.focusConfig.finishSound) ? state.focusConfig.finishSound : 'bowl';
+    el.timerFinishSoundSelect.addEventListener('change', (e) => {
+      if (!state.focusConfig) state.focusConfig = {};
+      state.focusConfig.finishSound = e.target.value;
+      saveState();
+      playClickSound();
+      showToast(`Finish alarm sound set: ${e.target.selectedOptions[0].text}`);
+    });
+  }
+
+  if (el.testFinishSoundBtn) {
+    el.testFinishSoundBtn.addEventListener('click', () => {
+      const snd = el.timerFinishSoundSelect ? el.timerFinishSoundSelect.value : 'bowl';
+      playFinishSound(snd);
+    });
+  }
+
+  // ==========================================================================
+  // CUSTOM FOCUS SETUP CONTROLLER
+  // ==========================================================================
+  function openCustomFocusModal() {
+    playClickSound();
+    if (!state.focusConfig) {
+      state.focusConfig = {
+        focusMins: 25,
+        shortBreakMins: 5,
+        longBreakMins: 15,
+        rounds: 4,
+        intention: 'Deep Work & Flow',
+        finishSound: 'bowl'
+      };
+    }
+    const cfg = state.focusConfig;
+    if (el.customFocusDurationSlider) el.customFocusDurationSlider.value = cfg.focusMins;
+    if (el.customFocusDurationInput) el.customFocusDurationInput.value = cfg.focusMins;
+    if (el.customBreakDurationInput) el.customBreakDurationInput.value = cfg.shortBreakMins;
+    if (el.customRoundsInput) el.customRoundsInput.value = cfg.rounds;
+    if (el.customFocusIntentionInput) el.customFocusIntentionInput.value = cfg.intention || '';
+
+    if (el.customFocusModal) el.customFocusModal.classList.add('open');
+  }
+
+  function closeCustomFocusModal() {
+    playClickSound();
+    if (el.customFocusModal) el.customFocusModal.classList.remove('open');
+  }
+
+  if (el.openCustomFocusModalBtn) el.openCustomFocusModalBtn.addEventListener('click', openCustomFocusModal);
+  if (el.closeCustomFocusModalBtn) el.closeCustomFocusModalBtn.addEventListener('click', closeCustomFocusModal);
+  if (el.cancelCustomFocusBtn) el.cancelCustomFocusBtn.addEventListener('click', closeCustomFocusModal);
+
+  // Sync Slider and Number Input
+  if (el.customFocusDurationSlider && el.customFocusDurationInput) {
+    el.customFocusDurationSlider.addEventListener('input', (e) => {
+      el.customFocusDurationInput.value = e.target.value;
+    });
+    el.customFocusDurationInput.addEventListener('input', (e) => {
+      const val = Math.min(180, Math.max(1, parseInt(e.target.value, 10) || 1));
+      el.customFocusDurationSlider.value = Math.min(120, val);
+    });
+  }
+
+  // Preset Card Clicks
+  if (el.focusPresetCards) {
+    el.focusPresetCards.forEach(card => {
+      card.addEventListener('click', () => {
+        playClickSound();
+        el.focusPresetCards.forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+
+        const fMins = parseInt(card.getAttribute('data-focus'), 10);
+        const bMins = parseInt(card.getAttribute('data-break'), 10);
+        const rRounds = parseInt(card.getAttribute('data-rounds'), 10);
+        const title = card.getAttribute('data-title');
+
+        if (el.customFocusDurationSlider) el.customFocusDurationSlider.value = fMins;
+        if (el.customFocusDurationInput) el.customFocusDurationInput.value = fMins;
+        if (el.customBreakDurationInput) el.customBreakDurationInput.value = bMins;
+        if (el.customRoundsInput) el.customRoundsInput.value = rRounds;
+        if (el.customFocusIntentionInput && !el.customFocusIntentionInput.value.trim()) {
+          el.customFocusIntentionInput.value = title;
+        }
+      });
+    });
+  }
+
+  if (el.customFocusForm) {
+    el.customFocusForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const focusMins = parseInt(el.customFocusDurationInput.value, 10) || 25;
+      const shortBreakMins = parseInt(el.customBreakDurationInput.value, 10) || 5;
+      const rounds = parseInt(el.customRoundsInput.value, 10) || 4;
+      const intention = el.customFocusIntentionInput.value.trim() || 'Deep Work & Flow';
+
+      state.focusConfig = {
+        ...state.focusConfig,
+        focusMins,
+        shortBreakMins,
+        rounds,
+        intention
+      };
+      saveState();
+
+      // Activate Custom pill in UI
+      if (el.timerModeBtns) {
+        el.timerModeBtns.forEach(b => b.classList.remove('active'));
+      }
+      if (el.timerCustomModeBtn) {
+        el.timerCustomModeBtn.classList.add('active');
+      }
+
+      timerDurationSecs = focusMins * 60;
+      resetTimer();
+      closeCustomFocusModal();
+      awardXP(20, 'Customized Focus Workflow');
+      showToast(`🎯 Focus configured: ${focusMins}m (${rounds} rounds)`, 'success');
+    });
+  }
+
+  // ==========================================================================
+  // ZEN DEEP FOCUS OVERLAY CONTROLLER
+  // ==========================================================================
+  function enterZenMode() {
+    playClickSound();
+    if (el.zenFocusOverlay) el.zenFocusOverlay.classList.add('open');
+    updateTimerUI();
+    showToast('🧘 Entered Deep Zen Focus Mode', 'normal');
+  }
+
+  function exitZenMode() {
+    playClickSound();
+    if (el.zenFocusOverlay) el.zenFocusOverlay.classList.remove('open');
+  }
+
+  if (el.enterZenModeBtn) el.enterZenModeBtn.addEventListener('click', enterZenMode);
+  if (el.exitZenModeBtn) el.exitZenModeBtn.addEventListener('click', exitZenMode);
+
+  if (el.zenToggleAmbientBtn) {
+    el.zenToggleAmbientBtn.addEventListener('click', () => {
+      playClickSound();
+      if (isAmbientPlaying) {
+        stopAmbientSound(0.3);
+      } else {
+        const toPlay = (state.ambientSound && state.ambientSound.current) || 'rain';
+        playAmbientSound(toPlay);
+      }
+      updateTimerUI();
     });
   }
 
@@ -2777,10 +3557,73 @@
   if (el.closeHabitModalBtn) el.closeHabitModalBtn.addEventListener('click', closeHabitModal);
   if (el.cancelHabitModalBtn) el.cancelHabitModalBtn.addEventListener('click', closeHabitModal);
 
+  // Alarms Modal Triggers & Form Listeners
+  function openAlarmsModal() {
+    playClickSound();
+    renderAlarms();
+    if (el.alarmsModal) el.alarmsModal.classList.add('open');
+  }
+
+  function closeAlarmsModal() {
+    playClickSound();
+    if (el.alarmsModal) el.alarmsModal.classList.remove('open');
+  }
+
+  if (el.alarmHeaderBtn) el.alarmHeaderBtn.addEventListener('click', openAlarmsModal);
+  if (el.closeAlarmsModalBtn) el.closeAlarmsModalBtn.addEventListener('click', closeAlarmsModal);
+  if (el.closeAlarmsDoneBtn) el.closeAlarmsDoneBtn.addEventListener('click', closeAlarmsModal);
+
+  // Preview Alarm Sound
+  if (el.testAlarmSoundBtn) {
+    el.testAlarmSoundBtn.addEventListener('click', () => {
+      const snd = el.newAlarmSoundInput ? el.newAlarmSoundInput.value : 'digital';
+      startAlarmSound(snd);
+      setTimeout(() => stopAlarmSound(), 2200);
+      showToast(`Previewing ${snd.toUpperCase()} alarm sound 🔊`);
+    });
+  }
+
+  // Create New Alarm
+  if (el.newAlarmForm) {
+    el.newAlarmForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const time = el.newAlarmTimeInput ? el.newAlarmTimeInput.value : '07:00';
+      const repeat = el.newAlarmRepeatInput ? el.newAlarmRepeatInput.value : 'everyday';
+      const label = (el.newAlarmLabelInput ? el.newAlarmLabelInput.value.trim() : '') || 'Scheduled Activity';
+      const sound = el.newAlarmSoundInput ? el.newAlarmSoundInput.value : 'digital';
+
+      if (!state.alarms) state.alarms = [];
+      state.alarms.push({
+        id: 'alarm_' + Date.now(),
+        time,
+        repeat,
+        label,
+        sound,
+        enabled: true
+      });
+
+      state.alarms.sort((a, b) => a.time.localeCompare(b.time));
+      saveState();
+      renderAlarms();
+      playCheckmarkSound();
+      triggerVibrate([60, 40, 60]);
+      awardXP(25, 'Scheduled Daily Alarm');
+      showToast(`⏰ Alarm set for ${time}!`, 'success');
+
+      if (el.newAlarmLabelInput) el.newAlarmLabelInput.value = '';
+    });
+  }
+
+  // Active Alarm Ringing Actions
+  if (el.snoozeAlarmBtn) el.snoozeAlarmBtn.addEventListener('click', snoozeCurrentAlarm);
+  if (el.dismissAlarmBtn) el.dismissAlarmBtn.addEventListener('click', dismissCurrentAlarm);
+
   // Close modals on backdrop click
   window.addEventListener('click', (e) => {
     if (e.target === el.routineModal) closeRoutineModal();
     if (e.target === el.habitModal) closeHabitModal();
+    if (e.target === el.customFocusModal) closeCustomFocusModal();
+    if (e.target === el.alarmsModal) closeAlarmsModal();
     if (e.target === el.settingsModal) el.settingsModal.classList.remove('open');
     if (e.target === el.badgesModal) el.badgesModal.classList.remove('open');
     if (e.target === el.templatesModal) el.templatesModal.classList.remove('open');
@@ -2975,6 +3818,7 @@
     resetTimer();
     renderAnalytics();
     updateOverallProgress();
+    renderAlarms();
 
     // Initialize gamification & interactive features
     renderGamification();
