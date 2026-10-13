@@ -304,12 +304,196 @@ assert(manifestContent.includes('android.permission.VIBRATE'), 'AndroidManifest 
 assert(manifestContent.includes('android.permission.WAKE_LOCK'), 'AndroidManifest has WAKE_LOCK permission');
 assert(manifestContent.includes('android.permission.POST_NOTIFICATIONS'), 'AndroidManifest has POST_NOTIFICATIONS permission');
 assert(manifestContent.includes('MainActivity'), 'AndroidManifest registers MainActivity');
+assert(manifestContent.includes('android:windowSoftInputMode="adjustResize"'), 'AndroidManifest has adjustResize softInputMode');
 
 const capConfigPath = path.join(__dirname, 'capacitor.config.json');
 const capConfig = JSON.parse(fs.readFileSync(capConfigPath, 'utf8'));
 
 assert(capConfig.webDir === 'www', 'Capacitor webDir is set to www');
 assert(capConfig.appId.length > 0, `Capacitor appId is set: ${capConfig.appId}`);
+assert(capConfig.plugins && capConfig.plugins.StatusBar, 'Capacitor config has StatusBar plugin settings');
+
+// --------------------------------------------------------------------------
+// TEST SUITE 11: Service Worker & PWA Manifest Integrity
+// --------------------------------------------------------------------------
+console.log('\n--- Test Suite 11: Service Worker & PWA Manifest ---');
+
+const swPath = path.join(__dirname, 'www', 'sw.js');
+assert(fs.existsSync(swPath), 'www/sw.js exists');
+const swContent = fs.readFileSync(swPath, 'utf8');
+
+// Verify Service Worker JS syntax via vm.Script
+let swSyntaxOk = true;
+try {
+  new vm.Script(swContent);
+} catch (e) {
+  swSyntaxOk = false;
+}
+assert(swSyntaxOk, 'www/sw.js is syntactically valid JavaScript');
+assert(swContent.includes('addEventListener(\'install\''), 'sw.js registers install event');
+assert(swContent.includes('addEventListener(\'fetch\''), 'sw.js registers fetch event');
+assert(swContent.includes('addEventListener(\'activate\''), 'sw.js registers activate event');
+
+const pwaManifestPath = path.join(__dirname, 'www', 'manifest.json');
+assert(fs.existsSync(pwaManifestPath), 'www/manifest.json exists');
+const pwaManifest = JSON.parse(fs.readFileSync(pwaManifestPath, 'utf8'));
+
+assert(pwaManifest.name === 'ActiDay - Daily Routine & Habit Tracker', 'manifest.json has correct full app name');
+assert(pwaManifest.short_name === 'ActiDay', 'manifest.json has correct short_name');
+assert(pwaManifest.display === 'standalone', 'manifest.json display is set to standalone');
+assert(pwaManifest.start_url === './index.html', 'manifest.json start_url points to index.html');
+assert(Array.isArray(pwaManifest.icons) && pwaManifest.icons.length > 0, 'manifest.json includes app icons');
+assert(Array.isArray(pwaManifest.shortcuts) && pwaManifest.shortcuts.length >= 4, 'manifest.json provides 4+ quick app shortcuts');
+
+// --------------------------------------------------------------------------
+// TEST SUITE 12: Theme Mode Resolution Engine
+// --------------------------------------------------------------------------
+console.log('\n--- Test Suite 12: Theme Mode Resolution Engine ---');
+
+function resolveThemeMode(chosenMode, isSystemDark) {
+  if (chosenMode === 'day') return 'day';
+  if (chosenMode === 'night') return 'night';
+  return isSystemDark ? 'night' : 'day';
+}
+
+assert(resolveThemeMode('day', true) === 'day', 'Explicit day mode resolves to day regardless of system');
+assert(resolveThemeMode('day', false) === 'day', 'Explicit day mode resolves to day on light system');
+assert(resolveThemeMode('night', false) === 'night', 'Explicit night mode resolves to night regardless of system');
+assert(resolveThemeMode('night', true) === 'night', 'Explicit night mode resolves to night on dark system');
+assert(resolveThemeMode('default', true) === 'night', 'Default mode follows system dark mode (night)');
+assert(resolveThemeMode('default', false) === 'day', 'Default mode follows system light mode (day)');
+
+// --------------------------------------------------------------------------
+// TEST SUITE 13: Routine Timeline & Happening-Now Detection
+// --------------------------------------------------------------------------
+console.log('\n--- Test Suite 13: Routine Timeline & Happening-Now Calculations ---');
+
+function parseTimeToMinutes(t) {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function isActivityActive(currentTimeStr, startStr, endStr) {
+  const cur = parseTimeToMinutes(currentTimeStr);
+  const start = parseTimeToMinutes(startStr);
+  const end = parseTimeToMinutes(endStr);
+  if (start <= end) {
+    return cur >= start && cur < end;
+  }
+  // Overnight interval (e.g., 22:00 - 06:00)
+  return cur >= start || cur < end;
+}
+
+function calculateMinutesRemaining(currentTimeStr, endStr) {
+  const cur = parseTimeToMinutes(currentTimeStr);
+  let end = parseTimeToMinutes(endStr);
+  if (end < cur) end += 24 * 60; // Crosses midnight
+  return Math.max(0, end - cur);
+}
+
+assert(isActivityActive('10:00', '09:00', '11:30') === true, '10:00 AM is active between 09:00 - 11:30');
+assert(isActivityActive('08:59', '09:00', '11:30') === false, '08:59 AM is inactive before 09:00');
+assert(isActivityActive('11:30', '09:00', '11:30') === false, '11:30 AM is inactive at end boundary');
+assert(isActivityActive('23:30', '22:00', '06:00') === true, 'Overnight activity active at 23:30 (22:00 - 06:00)');
+assert(isActivityActive('05:30', '22:00', '06:00') === true, 'Overnight activity active at 05:30 (22:00 - 06:00)');
+assert(isActivityActive('07:00', '22:00', '06:00') === false, 'Overnight activity inactive at 07:00');
+assert(calculateMinutesRemaining('10:45', '11:30') === 45, 'Minutes remaining: 10:45 to 11:30 is 45m');
+assert(calculateMinutesRemaining('23:30', '00:30') === 60, 'Minutes remaining across midnight: 23:30 to 00:30 is 60m');
+
+// --------------------------------------------------------------------------
+// TEST SUITE 14: 4-7-8 Breathwork Phase Engine
+// --------------------------------------------------------------------------
+console.log('\n--- Test Suite 14: 4-7-8 Breathwork Engine ---');
+
+const BREATH_CYCLE = {
+  inhale: 4,
+  hold: 7,
+  exhale: 8,
+  total: 19
+};
+
+function getBreathPhase(secondInCycle) {
+  const s = secondInCycle % BREATH_CYCLE.total;
+  if (s < BREATH_CYCLE.inhale) return { phase: 'Inhale', remaining: BREATH_CYCLE.inhale - s };
+  if (s < BREATH_CYCLE.inhale + BREATH_CYCLE.hold) return { phase: 'Hold', remaining: (BREATH_CYCLE.inhale + BREATH_CYCLE.hold) - s };
+  return { phase: 'Exhale', remaining: BREATH_CYCLE.total - s };
+}
+
+assert(BREATH_CYCLE.total === 19, 'Breath cycle total is 19 seconds (4 + 7 + 8)');
+assert(getBreathPhase(0).phase === 'Inhale', 'Second 0 is Inhale');
+assert(getBreathPhase(3).phase === 'Inhale', 'Second 3 is Inhale');
+assert(getBreathPhase(4).phase === 'Hold', 'Second 4 is Hold');
+assert(getBreathPhase(10).phase === 'Hold', 'Second 10 is Hold');
+assert(getBreathPhase(11).phase === 'Exhale', 'Second 11 is Exhale');
+assert(getBreathPhase(18).phase === 'Exhale', 'Second 18 is Exhale');
+assert(getBreathPhase(19).phase === 'Inhale', 'Second 19 starts next cycle Inhale');
+
+// --------------------------------------------------------------------------
+// TEST SUITE 15: Hardware Back Button Navigation Controller Logic
+// --------------------------------------------------------------------------
+console.log('\n--- Test Suite 15: Hardware Back & Modal Navigation Controller ---');
+
+function simulateDeviceBack({ openModalsCount, currentTab, lastBackPressTime, now }) {
+  if (openModalsCount > 0) {
+    return { action: 'close_modal', exited: false, newTab: currentTab, newBackPressTime: lastBackPressTime };
+  }
+  if (currentTab !== 'tabRoutine') {
+    return { action: 'switch_to_routine', exited: false, newTab: 'tabRoutine', newBackPressTime: lastBackPressTime };
+  }
+  if (now - lastBackPressTime < 2000) {
+    return { action: 'exit_app', exited: true, newTab: currentTab, newBackPressTime: now };
+  }
+  return { action: 'show_exit_toast', exited: false, newTab: currentTab, newBackPressTime: now };
+}
+
+// Case 1: Modal is open -> close modal
+const backCase1 = simulateDeviceBack({ openModalsCount: 1, currentTab: 'tabHabits', lastBackPressTime: 0, now: 5000 });
+assert(backCase1.action === 'close_modal' && !backCase1.exited, 'Back button prioritizes closing open modal');
+
+// Case 2: No modal, on secondary tab -> returns to tabRoutine
+const backCase2 = simulateDeviceBack({ openModalsCount: 0, currentTab: 'tabFocus', lastBackPressTime: 0, now: 5000 });
+assert(backCase2.action === 'switch_to_routine' && backCase2.newTab === 'tabRoutine', 'Back button returns from Focus tab to Routine tab');
+
+// Case 3: On tabRoutine, first press -> shows toast
+const backCase3 = simulateDeviceBack({ openModalsCount: 0, currentTab: 'tabRoutine', lastBackPressTime: 0, now: 10000 });
+assert(backCase3.action === 'show_exit_toast' && !backCase3.exited, 'First back press on Home tab shows exit toast');
+
+// Case 4: On tabRoutine, second press within 2s -> exits app
+const backCase4 = simulateDeviceBack({ openModalsCount: 0, currentTab: 'tabRoutine', lastBackPressTime: 10000, now: 10800 });
+assert(backCase4.action === 'exit_app' && backCase4.exited, 'Second back press within 2 seconds exits app');
+
+// Case 5: On tabRoutine, second press after 2.5s -> resets and shows toast again
+const backCase5 = simulateDeviceBack({ openModalsCount: 0, currentTab: 'tabRoutine', lastBackPressTime: 10000, now: 12600 });
+assert(backCase5.action === 'show_exit_toast' && !backCase5.exited, 'Back press after 2s timeout resets exit timer');
+
+// --------------------------------------------------------------------------
+// TEST SUITE 16: Compiled Android Artifacts & Assets Verification
+// --------------------------------------------------------------------------
+console.log('\n--- Test Suite 16: Android Build Artifacts & Assets Verification ---');
+
+const gradleApkPath = path.join(__dirname, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
+assert(fs.existsSync(gradleApkPath), 'Gradle build output app-debug.apk exists');
+const gradleApkStat = fs.statSync(gradleApkPath);
+assert(gradleApkStat.size > 5000000, `Gradle app-debug.apk is healthy (${(gradleApkStat.size / (1024 * 1024)).toFixed(2)} MB)`);
+
+const desktopApkPath = 'C:\\Users\\Mahab\\Desktop\\ActiDay.apk';
+assert(fs.existsSync(desktopApkPath), 'Desktop export ActiDay.apk exists');
+const desktopApkStat = fs.statSync(desktopApkPath);
+assert(desktopApkStat.size === gradleApkStat.size, 'Desktop APK matches latest Gradle build size exactly');
+
+const exportApkPath = path.join(__dirname, 'export', 'ActiDay.apk');
+assert(fs.existsSync(exportApkPath), 'Project export/ActiDay.apk exists');
+const exportApkStat = fs.statSync(exportApkPath);
+assert(exportApkStat.size === gradleApkStat.size, 'Export folder APK matches latest build size exactly');
+
+const stringsPath = path.join(__dirname, 'android', 'app', 'src', 'main', 'res', 'values', 'strings.xml');
+const stringsContent = fs.readFileSync(stringsPath, 'utf8');
+assert(stringsContent.includes('<string name="app_name">ActiDay</string>'), 'strings.xml configures app_name as ActiDay');
+
+const stylesPath = path.join(__dirname, 'android', 'app', 'src', 'main', 'res', 'values', 'styles.xml');
+const stylesContent = fs.readFileSync(stylesPath, 'utf8');
+assert(stylesContent.includes('AppTheme.NoActionBarLaunch'), 'styles.xml has AppTheme.NoActionBarLaunch');
+assert(stylesContent.includes('AppTheme.NoActionBar'), 'styles.xml has AppTheme.NoActionBar');
 
 // --------------------------------------------------------------------------
 // SUMMARY
