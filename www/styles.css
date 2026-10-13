@@ -168,12 +168,28 @@ body.theme-dark {
 html, body {
   width: 100%;
   height: 100%;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
   font-family: var(--font-main);
   background-color: var(--bg-app);
   color: var(--text-primary);
-  overflow-x: hidden;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
   transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Allow text selection in inputs and textareas */
+input, textarea {
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 /* Headings use Outfit Display Font */
@@ -182,81 +198,61 @@ h1, h2, h3, h4, .greeting-text, .hero-title, .tab-heading, .section-title, .moda
   letter-spacing: -0.02em;
 }
 
-/* Desktop Preview Bezel Wrapper */
+/* True Native App Fullscreen Layout (Edge-to-Edge on all physical devices) */
 .device-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  padding: 20px;
-  background: var(--bg-body-outer);
-  transition: background 0.3s ease;
-}
-
-.device-wrapper.full-screen-mode {
-  padding: 0;
-  background: var(--bg-app);
-}
-
-.device-wrapper.full-screen-mode .mobile-frame {
   width: 100vw;
+  width: 100%;
   height: 100vh;
-  max-width: 100%;
-  border-radius: 0;
-  box-shadow: none;
-  border: none;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-app);
+  overflow: hidden;
+  position: relative;
 }
 
 .mobile-frame {
   position: relative;
   width: 100%;
-  max-width: 440px;
-  height: 890px;
-  max-height: 94vh;
+  height: 100%;
+  height: 100dvh;
+  max-width: 100%;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 0;
   background-color: var(--bg-app);
-  border-radius: 44px;
-  border: 10px solid var(--bg-frame-border);
-  box-shadow: var(--shadow-lg), 0 0 40px rgba(99, 102, 241, 0.12);
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  flex: 1;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
-/* Subtle speaker slit on desktop mockup bezel (hidden on real mobile) */
 .mobile-frame::before {
-  content: '';
-  position: absolute;
-  top: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 44px;
-  height: 4px;
-  border-radius: 4px;
-  background: rgba(128, 128, 128, 0.3);
-  z-index: 100;
-  pointer-events: none;
+  display: none !important;
 }
 
-/* Native Mobile System Adaptations */
-@media (max-width: 600px), (display-mode: standalone) {
-  .device-wrapper {
-    padding: 0 !important;
-    min-height: 100% !important;
-    height: 100% !important;
-    background: var(--bg-app) !important;
+/* Desktop Preview Frame Mode (Only when explicitly enabled on ultra-wide desktop monitors) */
+@media (min-width: 1100px) and (hover: hover) and (pointer: fine) {
+  body.desktop-mockup-mode .device-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    background: var(--bg-body-outer);
   }
-  .mobile-frame {
-    width: 100% !important;
-    max-width: 100% !important;
-    height: 100% !important;
-    max-height: 100% !important;
-    border-radius: 0 !important;
-    border: none !important;
-    box-shadow: none !important;
-  }
-  .mobile-frame::before {
-    display: none !important;
+  body.desktop-mockup-mode .mobile-frame {
+    max-width: 440px;
+    height: 890px;
+    max-height: 94vh;
+    border-radius: 40px;
+    border: 8px solid var(--bg-frame-border);
+    box-shadow: var(--shadow-lg), 0 0 40px rgba(99, 102, 241, 0.12);
   }
 }
 
@@ -721,7 +717,9 @@ body.theme-light .theme-pill-btn:hover {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 14px 16px 80px; /* bottom padding ensures content doesn't get covered by nav */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding: 14px 16px calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + 20px);
   position: relative;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
@@ -2178,7 +2176,8 @@ input:checked + .slider:before {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: var(--nav-height);
+  height: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
+  min-height: var(--nav-height);
   background: var(--bg-nav);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -2186,8 +2185,9 @@ input:checked + .slider:before {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 4px env(safe-area-inset-bottom);
+  padding: 0 4px max(6px, env(safe-area-inset-bottom, 6px));
   z-index: 100;
+  box-sizing: border-box;
   transition: background 0.25s ease, border-color 0.25s ease;
 }
 
@@ -2326,19 +2326,36 @@ body.theme-day .bottom-theme-logo-disc {
 
 .modal-sheet {
   width: 100%;
-  max-width: 440px;
+  max-width: 520px;
   background: var(--bg-modal);
   color: var(--text-primary);
   border-top-left-radius: 28px;
   border-top-right-radius: 28px;
   border: 1px solid var(--border-subtle);
   border-bottom: none;
-  padding: 20px;
+  padding: 14px 20px max(24px, env(safe-area-inset-bottom, 24px));
   box-shadow: var(--shadow-lg);
   animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  max-height: 85vh;
+  max-height: 88vh;
+  max-height: 88dvh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   transition: background-color 0.25s ease, color 0.25s ease;
+  position: relative;
+}
+
+.modal-sheet::before {
+  content: '';
+  display: block;
+  width: 38px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: var(--radius-full);
+  margin: 0 auto 14px auto;
+}
+
+body.theme-day .modal-sheet::before {
+  background: rgba(15, 23, 42, 0.22);
 }
 
 @keyframes fadeIn {

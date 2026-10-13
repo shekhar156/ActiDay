@@ -1073,6 +1073,12 @@
   // Haptic Feedback for Android Mobile
   function triggerVibrate(pattern = [40]) {
     if (!state.settings.vibrationEnabled) return;
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics) {
+      try {
+        window.Capacitor.Plugins.Haptics.impact({ style: 'LIGHT' });
+        return;
+      } catch (e) {}
+    }
     if ('vibrate' in navigator) {
       try {
         navigator.vibrate(pattern);
@@ -3103,6 +3109,8 @@
   // ==========================================================================
   function switchTab(tabId) {
     playClickSound();
+    triggerVibrate([20]);
+    state.activeTab = tabId;
     el.navTabs.forEach(tab => {
       if (tab.getAttribute('data-tab') === tabId) {
         tab.classList.add('active');
@@ -3480,8 +3488,18 @@
 
     // Update <meta name="theme-color"> for Android status bar and mobile browsers
     const metaColor = document.getElementById('appThemeColor');
+    const targetStatusColor = (effectiveScheme === 'day') ? '#f4f6fb' : '#080c14';
     if (metaColor) {
-      metaColor.content = (effectiveScheme === 'day') ? '#f4f6fb' : '#080c14';
+      metaColor.content = targetStatusColor;
+    }
+
+    // Update Native Android Status Bar via Capacitor
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar) {
+      try {
+        const StatusBar = window.Capacitor.Plugins.StatusBar;
+        StatusBar.setBackgroundColor({ color: targetStatusColor });
+        StatusBar.setStyle({ style: (effectiveScheme === 'day') ? 'LIGHT' : 'DARK' });
+      } catch (e) {}
     }
 
     // Update <meta name="color-scheme">
@@ -4723,7 +4741,86 @@
       }
     }
     handleRouteHash();
-    window.addEventListener('hashchange', handleRouteHash);
+    // ========================================================================
+    // NATIVE ANDROID SYSTEM NAVIGATION & HARDWARE BACK BUTTON
+    // ========================================================================
+    let lastBackPressTime = 0;
+
+    function handleDeviceBack() {
+      // 1. If any modal / bottom sheet is open, close the active one
+      const openModals = [
+        { el: el.zenFocusOverlay, close: () => closeZenOverlay && closeZenOverlay() },
+        { el: el.customFocusModal, close: () => closeCustomFocusModal && closeCustomFocusModal() },
+        { el: el.routineModal, close: () => closeRoutineModal && closeRoutineModal() },
+        { el: el.habitModal, close: () => closeHabitModal && closeHabitModal() },
+        { el: el.alarmsModal, close: () => closeAlarmsModal && closeAlarmsModal() },
+        { el: el.settingsModal, close: () => el.settingsModal && el.settingsModal.classList.remove('open') },
+        { el: el.badgesModal, close: () => el.badgesModal && el.badgesModal.classList.remove('open') },
+        { el: el.templatesModal, close: () => el.templatesModal && el.templatesModal.classList.remove('open') },
+        { el: el.breathingModal, close: () => { if (typeof pauseBreathingSession === 'function') pauseBreathingSession(); if (el.breathingModal) el.breathingModal.classList.remove('open'); } },
+        { el: el.scratchpadModal, close: () => el.scratchpadModal && el.scratchpadModal.classList.remove('open') },
+        { el: el.activeAlarmRingModal, close: () => el.activeAlarmRingModal && el.activeAlarmRingModal.classList.remove('open') }
+      ];
+
+      for (const item of openModals) {
+        if (item.el && item.el.classList.contains('open')) {
+          item.close();
+          triggerVibrate([20]);
+          return true;
+        }
+      }
+
+      // 2. If on secondary tab (Habits, Tasks, Focus, Insights), return to Tab 1 (Routine / Home)
+      if (state.activeTab && state.activeTab !== 'tabRoutine') {
+        switchTab('tabRoutine');
+        triggerVibrate([20]);
+        return true;
+      }
+
+      // 3. If on Tab 1 with no modal open: double-back to exit
+      const now = Date.now();
+      if (now - lastBackPressTime < 2000) {
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App && typeof window.Capacitor.Plugins.App.exitApp === 'function') {
+          window.Capacitor.Plugins.App.exitApp();
+        }
+        return false;
+      } else {
+        lastBackPressTime = now;
+        showToast('Tap back again to exit ActiDay', 'normal');
+        triggerVibrate([30]);
+        return true;
+      }
+    }
+
+    // Android Hardware Back button listeners (Capacitor App Plugin + Cordova + Web PopState)
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+      try {
+        window.Capacitor.Plugins.App.addListener('backButton', () => {
+          handleDeviceBack();
+        });
+      } catch (e) {}
+    }
+
+    document.addEventListener('backbutton', (e) => {
+      e.preventDefault();
+      handleDeviceBack();
+    }, false);
+
+    window.addEventListener('popstate', (e) => {
+      handleDeviceBack();
+    });
+
+    // 4. Android Soft Keyboard (Virtual Keyboard) view adjustment
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', () => {
+        const active = document.activeElement;
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) {
+          setTimeout(() => {
+            active.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 100);
+        }
+      });
+    }
 
     console.log('Daily Routine Android App initialized successfully with Service Worker offline & notification suite.');
   }
