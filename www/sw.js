@@ -160,7 +160,9 @@ self.addEventListener('sync', (event) => {
   }
 });
 
-// 7. Message Handler - Support programmatic notifications from app.js
+// 7. Message Handler - Support programmatic notifications & background timer alerts
+const activeBackgroundTimers = new Map();
+
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
     const { title, body, tag } = event.data;
@@ -171,6 +173,29 @@ self.addEventListener('message', (event) => {
       tag: tag || 'actiday-inapp-alert',
       vibrate: [150, 75, 150]
     });
+  } else if (event.data && event.data.type === 'SCHEDULE_TIMER_ALERT') {
+    const { id, delayMs, title, body } = event.data;
+    if (activeBackgroundTimers.has(id)) {
+      clearTimeout(activeBackgroundTimers.get(id));
+    }
+    const timerId = setTimeout(() => {
+      self.registration.showNotification(title || 'ActiDay Focus Timer', {
+        body: body || 'Focus session complete! Time to take a mindful break.',
+        icon: './icons/icon.svg',
+        badge: './icons/icon.svg',
+        tag: id || 'actiday-timer-finish',
+        vibrate: [250, 100, 250, 100, 400],
+        requireInteraction: true
+      });
+      activeBackgroundTimers.delete(id);
+    }, Math.max(100, delayMs));
+    activeBackgroundTimers.set(id, timerId);
+  } else if (event.data && event.data.type === 'CANCEL_TIMER_ALERT') {
+    const { id } = event.data;
+    if (activeBackgroundTimers.has(id)) {
+      clearTimeout(activeBackgroundTimers.get(id));
+      activeBackgroundTimers.delete(id);
+    }
   } else if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }

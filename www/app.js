@@ -260,6 +260,7 @@
         if (!merged.focusConfig) merged.focusConfig = JSON.parse(JSON.stringify(DEFAULT_DATA.focusConfig));
         if (!merged.alarms) merged.alarms = JSON.parse(JSON.stringify(DEFAULT_DATA.alarms));
         if (typeof merged.scratchpad === 'undefined') merged.scratchpad = '';
+        if (parsed.activeTimer) merged.activeTimer = parsed.activeTimer;
         return merged;
       }
     } catch (e) {
@@ -1472,9 +1473,15 @@
   let lastAlarmFiredKey = null;
 
   function checkAlarms(now) {
-    const currentHour = String(now.getHours()).padStart(2, '0');
-    const currentMin = String(now.getMinutes()).padStart(2, '0');
-    const currentTimeStr = `${currentHour}:${currentMin}`;
+    const currentHour = now.getHours();
+    const currentMin = now.getMinutes();
+    const currentSecs = now.getSeconds();
+    const currentHourStr = String(currentHour).padStart(2, '0');
+    const currentMinStr = String(currentMin).padStart(2, '0');
+    const currentTimeStr = `${currentHourStr}:${currentMinStr}`;
+    const todayDateStr = now.toISOString().split('T')[0];
+    const nowMinutesTotal = currentHour * 60 + currentMin;
+
     const dayOfWeek = now.getDay();
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
     const isWeekday = !isWeekend;
@@ -1488,26 +1495,33 @@
     }
 
     if (el.alarmRingLiveClock) {
-      const secs = String(now.getSeconds()).padStart(2, '0');
       const is12Hour = !state.settings || state.settings.timeFormat !== '24h';
       if (is12Hour) {
-        const rawHours = now.getHours();
-        const h12 = rawHours % 12 === 0 ? 12 : rawHours % 12;
-        const ampm = rawHours >= 12 ? 'PM' : 'AM';
-        el.alarmRingLiveClock.textContent = `${String(h12).padStart(2, '0')}:${currentMin}:${secs} ${ampm}`;
+        const h12 = currentHour % 12 === 0 ? 12 : currentHour % 12;
+        const ampm = currentHour >= 12 ? 'PM' : 'AM';
+        el.alarmRingLiveClock.textContent = `${String(h12).padStart(2, '0')}:${currentMinStr}:${String(currentSecs).padStart(2, '0')} ${ampm}`;
       } else {
-        el.alarmRingLiveClock.textContent = `${currentTimeStr}:${secs}`;
+        el.alarmRingLiveClock.textContent = `${currentTimeStr}:${String(currentSecs).padStart(2, '0')}`;
       }
     }
-
-    // Guard against re-triggering during the same minute
-    if (lastAlarmFiredKey === currentTimeStr) return;
 
     // 1. Check custom alarms list
     if (state.alarms && state.alarms.length > 0) {
       for (const alarm of state.alarms) {
         if (!alarm.enabled) continue;
-        if (alarm.time === currentTimeStr) {
+        const [aHour, aMin] = alarm.time.split(':').map(Number);
+        const alarmMinutesTotal = aHour * 60 + aMin;
+
+        // Check if matching exact minute OR missed within last 10 minutes due to phone sleep
+        const isExactMatch = (currentHour === aHour && currentMin === aMin);
+        const isRecentMissed = (nowMinutesTotal >= alarmMinutesTotal && (nowMinutesTotal - alarmMinutesTotal) <= 10);
+
+        if (isExactMatch || isRecentMissed) {
+          const alarmKey = `${todayDateStr}_${alarm.id || alarm.time}_${alarmMinutesTotal}`;
+          if (alarm.lastFiredKey === alarmKey || lastAlarmFiredKey === alarmKey) {
+            continue; // Already fired today
+          }
+
           let shouldFire = false;
           if (alarm.repeat === 'everyday') shouldFire = true;
           else if (alarm.repeat === 'weekdays' && isWeekday) shouldFire = true;
@@ -1515,12 +1529,13 @@
           else if (alarm.repeat === 'once') {
             shouldFire = true;
             alarm.enabled = false;
-            saveState();
             renderAlarms();
           }
 
           if (shouldFire) {
-            lastAlarmFiredKey = currentTimeStr;
+            alarm.lastFiredKey = alarmKey;
+            lastAlarmFiredKey = alarmKey;
+            saveState();
             triggerAlarmAlert(alarm.label || 'Daily Alarm', alarm.sound || 'digital');
             return;
           }
@@ -1531,8 +1546,21 @@
     // 2. Check routine activities with start-time alarms
     if (state.routines && state.routines.length > 0) {
       for (const r of state.routines) {
-        if (r.alarm && r.startTime === currentTimeStr) {
-          lastAlarmFiredKey = currentTimeStr;
+        if (!r.alarm || !r.startTime) continue;
+        const [rH, rM] = r.startTime.split(':').map(Number);
+        const routineMinutesTotal = rH * 60 + rM;
+
+        const isExactMatch = (currentHour === rH && currentMin === rM);
+        const isRecentMissed = (nowMinutesTotal >= routineMinutesTotal && (nowMinutesTotal - routineMinutesTotal) <= 10);
+
+        if (isExactMatch || isRecentMissed) {
+          const routineKey = `routine_${todayDateStr}_${r.id}_${routineMinutesTotal}`;
+          if (r.lastFiredKey === routineKey || lastAlarmFiredKey === routineKey) {
+            continue;
+          }
+          r.lastFiredKey = routineKey;
+          lastAlarmFiredKey = routineKey;
+          saveState();
           triggerAlarmAlert(`Routine Started: ${r.title}`, 'zen');
           return;
         }
@@ -2359,7 +2387,54 @@
   let timerInterval = null;
   let isTimerRunning = false;
   let currentSession = 1;
+  let timerEndTime = null;
+  let wakeLockObj = null;
   const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * 110; // ~691.15
+
+  async function requestScreenWakeLock() {
+    if ('wakeLock' in navigator && !wakeLockObj) {
+      try {
+        wakeLockObj = await navigator.wakeLock.request('screen');
+        wakeLockObj.addEventListener('release', () => {
+          wakeLockObj = null;
+        });
+      } catch (e) {}
+    }
+  }
+
+  function releaseScreenWakeLock() {
+    if (wakeLockObj) {
+      try {
+        wakeLockObj.release();
+      } catch (e) {}
+      wakeLockObj = null;
+    }
+  }
+
+  function scheduleServiceWorkerTimerAlert(delaySeconds, sessionName) {
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+      try {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'SCHEDULE_TIMER_ALERT',
+          id: 'actiday-focus-session',
+          delayMs: Math.max(100, delaySeconds * 1000),
+          title: 'Focus Session Complete! 🔔',
+          body: `Great work! Your ${sessionName || 'focus'} session has concluded. Take a mindful break.`
+        });
+      } catch (e) {}
+    }
+  }
+
+  function cancelServiceWorkerTimerAlert() {
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+      try {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'CANCEL_TIMER_ALERT',
+          id: 'actiday-focus-session'
+        });
+      } catch (e) {}
+    }
+  }
 
   function getMaxSessions() {
     return (state.focusConfig && state.focusConfig.rounds) ? state.focusConfig.rounds : 4;
@@ -2374,8 +2449,8 @@
     if (el.timerDigits) el.timerDigits.textContent = formatted;
     if (el.zenDigits) el.zenDigits.textContent = formatted;
 
-    const progressRatio = (timerDurationSecs - timerRemainingSecs) / timerDurationSecs;
-    const offset = CIRCLE_CIRCUMFERENCE * (1 - progressRatio);
+    const progressRatio = timerDurationSecs > 0 ? (timerDurationSecs - timerRemainingSecs) / timerDurationSecs : 0;
+    const offset = CIRCLE_CIRCUMFERENCE * (1 - Math.min(1, Math.max(0, progressRatio)));
     if (el.timerProgressRing) {
       el.timerProgressRing.style.strokeDashoffset = offset;
     }
@@ -2409,6 +2484,24 @@
     if (isTimerRunning) return;
     initAudio();
     isTimerRunning = true;
+    const now = Date.now();
+    timerEndTime = now + (timerRemainingSecs * 1000);
+
+    // Persist active timer state for background resilience & next launch
+    state.activeTimer = {
+      isRunning: true,
+      endTime: timerEndTime,
+      durationSecs: timerDurationSecs,
+      remainingSecs: timerRemainingSecs,
+      session: currentSession,
+      mode: (state.focusConfig && state.focusConfig.selectedMode) || 'pomodoro',
+      intention: (state.focusConfig && state.focusConfig.intention) || 'Deep Work & Flow'
+    };
+    saveState();
+
+    requestScreenWakeLock();
+    scheduleServiceWorkerTimerAlert(timerRemainingSecs, (state.focusConfig && state.focusConfig.intention) || 'Focus');
+
     updateTimerUI();
     const statusText = 'Focusing... Stay in flow';
     if (el.timerSubStatus) el.timerSubStatus.textContent = statusText;
@@ -2419,9 +2512,16 @@
       playAmbientSound(state.ambientSound.current);
     }
 
+    if (timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(() => {
+      const currentTime = Date.now();
+      if (timerEndTime) {
+        timerRemainingSecs = Math.max(0, Math.round((timerEndTime - currentTime) / 1000));
+      } else {
+        timerRemainingSecs = Math.max(0, timerRemainingSecs - 1);
+      }
+
       if (timerRemainingSecs > 0) {
-        timerRemainingSecs--;
         playTickSound();
         updateTimerUI();
       } else {
@@ -2433,7 +2533,24 @@
   function pauseTimer() {
     if (!isTimerRunning) return;
     isTimerRunning = false;
-    clearInterval(timerInterval);
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = null;
+    timerEndTime = null;
+
+    releaseScreenWakeLock();
+    cancelServiceWorkerTimerAlert();
+
+    // Persist paused timer state
+    state.activeTimer = {
+      isRunning: false,
+      endTime: null,
+      durationSecs: timerDurationSecs,
+      remainingSecs: timerRemainingSecs,
+      session: currentSession,
+      mode: (state.focusConfig && state.focusConfig.selectedMode) || 'pomodoro'
+    };
+    saveState();
+
     updateTimerUI();
     const pausedText = 'Paused';
     if (el.timerSubStatus) el.timerSubStatus.textContent = pausedText;
@@ -2447,6 +2564,11 @@
   function resetTimer() {
     pauseTimer();
     timerRemainingSecs = timerDurationSecs;
+    timerEndTime = null;
+
+    state.activeTimer = null;
+    saveState();
+
     updateTimerUI();
     const readyText = 'Ready to focus';
     if (el.timerSubStatus) el.timerSubStatus.textContent = readyText;
@@ -2459,6 +2581,10 @@
 
   function finishTimer() {
     pauseTimer();
+    timerEndTime = null;
+    state.activeTimer = null;
+    saveState();
+
     const chosenSound = state.focusConfig ? state.focusConfig.finishSound : 'bowl';
     playFinishSound(chosenSound);
     triggerVibrate([200, 100, 300, 100, 400]);
@@ -2468,7 +2594,7 @@
     }
 
     // Track completed session
-    const minutesAdded = Math.round(timerDurationSecs / 60);
+    const minutesAdded = Math.max(1, Math.round(timerDurationSecs / 60));
     state.analytics.totalFocusMinutes += minutesAdded;
     state.analytics.sessionsCompleted += 1;
     saveState();
@@ -2567,6 +2693,10 @@
       el.timerModeBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       const mode = btn.getAttribute('data-mode');
+      if (!state.focusConfig) state.focusConfig = {};
+      state.focusConfig.selectedMode = mode;
+      state.activeTimer = null;
+
       if (mode === 'customConfig') {
         const customMins = (state.focusConfig && state.focusConfig.focusMins) ? state.focusConfig.focusMins : 25;
         timerDurationSecs = customMins * 60;
@@ -2576,6 +2706,7 @@
         timerDurationSecs = durationMins * 60;
         updateCustomFocusCardVisibility(false);
       }
+      saveState();
       resetTimer();
     });
   });
@@ -2701,10 +2832,12 @@
         longBreakMins: 15,
         rounds: 4,
         intention: 'Deep Work & Flow',
-        finishSound: 'bowl'
+        finishSound: 'bowl',
+        selectedMode: 'customConfig'
       };
     } else {
       state.focusConfig.focusMins = validMins;
+      state.focusConfig.selectedMode = 'customConfig';
       if (intention !== null && intention.trim()) {
         state.focusConfig.intention = intention.trim();
       }
@@ -2759,9 +2892,13 @@
     // Ensure customize card is visible when setting custom duration
     updateCustomFocusCardVisibility(true);
 
-    // Update UI if timer is idle
-    if (shouldResetTimer && !isTimerRunning) {
-      resetTimer();
+    // Update UI immediately if timer is idle
+    if (!isTimerRunning) {
+      timerRemainingSecs = timerDurationSecs;
+      timerEndTime = null;
+      state.activeTimer = null;
+      saveState();
+      updateTimerUI();
     }
   }
 
@@ -4653,7 +4790,6 @@
     renderRoutines();
     renderHabits();
     renderTasks();
-    resetTimer();
     renderAnalytics();
     updateOverallProgress();
     renderAlarms();
@@ -4719,16 +4855,67 @@
       });
     }
 
-    // Default to Focus 25m mode: customize session time is shown ONLY in custom mode
-    if (el.timerModeBtns) {
-      el.timerModeBtns.forEach(b => {
-        if (b.getAttribute('data-mode') === 'pomodoro') b.classList.add('active');
-        else b.classList.remove('active');
-      });
+    // Restore User's Saved Focus Timer State (Active background session or saved mode)
+    const savedTimerMode = (state.focusConfig && state.focusConfig.selectedMode) || 'pomodoro';
+    const savedCustomMins = (state.focusConfig && state.focusConfig.focusMins) ? state.focusConfig.focusMins : 25;
+
+    let restoredActive = false;
+    if (state.activeTimer) {
+      const at = state.activeTimer;
+      timerDurationSecs = at.durationSecs || (25 * 60);
+      currentSession = at.session || 1;
+      const atMode = at.mode || savedTimerMode;
+
+      if (el.timerModeBtns) {
+        el.timerModeBtns.forEach(b => {
+          b.classList.toggle('active', b.getAttribute('data-mode') === atMode);
+        });
+      }
+      updateCustomFocusCardVisibility(atMode === 'customConfig');
+
+      if (at.isRunning && at.endTime) {
+        const now = Date.now();
+        const remaining = Math.round((at.endTime - now) / 1000);
+        if (remaining <= 0) {
+          // Finished in background while closed
+          timerRemainingSecs = 0;
+          updateTimerUI();
+          finishTimer();
+          restoredActive = true;
+        } else {
+          timerRemainingSecs = remaining;
+          startTimer();
+          restoredActive = true;
+        }
+      } else if (!at.isRunning && at.remainingSecs) {
+        timerRemainingSecs = at.remainingSecs;
+        updateTimerUI();
+        restoredActive = true;
+      }
     }
-    timerDurationSecs = 25 * 60;
-    resetTimer();
-    updateCustomFocusCardVisibility(false);
+
+    if (!restoredActive) {
+      if (el.timerModeBtns) {
+        el.timerModeBtns.forEach(b => {
+          b.classList.toggle('active', b.getAttribute('data-mode') === savedTimerMode);
+        });
+      }
+      if (savedTimerMode === 'customConfig') {
+        timerDurationSecs = savedCustomMins * 60;
+        updateCustomFocusCardVisibility(true);
+      } else if (savedTimerMode === 'shortBreak') {
+        timerDurationSecs = 5 * 60;
+        updateCustomFocusCardVisibility(false);
+      } else if (savedTimerMode === 'longBreak') {
+        timerDurationSecs = 15 * 60;
+        updateCustomFocusCardVisibility(false);
+      } else {
+        timerDurationSecs = 25 * 60;
+        updateCustomFocusCardVisibility(false);
+      }
+      timerRemainingSecs = timerDurationSecs;
+      updateTimerUI();
+    }
 
     // Handle deep-link hash routing from PWA Manifest Shortcuts
     function handleRouteHash() {
@@ -4885,6 +5072,64 @@
         }
       });
     });
+
+    // ========================================================================
+    // 6. BACKGROUND APP LIFECYCLE & STATE RESILIENCE ENGINE
+    // ========================================================================
+    function syncBackgroundState() {
+      // 1. Check alarms if any matured while app was paused / backgrounded
+      if (typeof checkAlarms === 'function') {
+        checkAlarms();
+      }
+
+      // 2. Synchronize running focus timer against wall-clock time
+      if (isTimerRunning && timerEndTime) {
+        const remaining = Math.max(0, Math.round((timerEndTime - Date.now()) / 1000));
+        if (remaining <= 0) {
+          timerRemainingSecs = 0;
+          updateTimerUI();
+          finishTimer();
+        } else {
+          timerRemainingSecs = remaining;
+          updateTimerUI();
+        }
+      }
+
+      // 3. Persist current application state
+      saveState();
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        saveState();
+      } else {
+        syncBackgroundState();
+      }
+    });
+
+    window.addEventListener('focus', () => {
+      syncBackgroundState();
+    });
+
+    window.addEventListener('beforeunload', () => {
+      saveState();
+    });
+
+    window.addEventListener('pagehide', () => {
+      saveState();
+    });
+
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+      try {
+        window.Capacitor.Plugins.App.addListener('appStateChange', (appState) => {
+          if (!appState.isActive) {
+            saveState();
+          } else {
+            syncBackgroundState();
+          }
+        });
+      } catch (e) {}
+    }
 
     console.log('Daily Routine Android App initialized successfully with Service Worker offline & notification suite.');
   }

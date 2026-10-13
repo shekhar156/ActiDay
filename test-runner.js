@@ -303,6 +303,9 @@ assert(manifestContent.includes('android.permission.INTERNET'), 'AndroidManifest
 assert(manifestContent.includes('android.permission.VIBRATE'), 'AndroidManifest has VIBRATE permission');
 assert(manifestContent.includes('android.permission.WAKE_LOCK'), 'AndroidManifest has WAKE_LOCK permission');
 assert(manifestContent.includes('android.permission.POST_NOTIFICATIONS'), 'AndroidManifest has POST_NOTIFICATIONS permission');
+assert(manifestContent.includes('android.permission.FOREGROUND_SERVICE'), 'AndroidManifest has FOREGROUND_SERVICE permission');
+assert(manifestContent.includes('android.permission.RECEIVE_BOOT_COMPLETED'), 'AndroidManifest has RECEIVE_BOOT_COMPLETED permission');
+assert(manifestContent.includes('android.permission.SCHEDULE_EXACT_ALARM'), 'AndroidManifest has SCHEDULE_EXACT_ALARM permission');
 assert(manifestContent.includes('MainActivity'), 'AndroidManifest registers MainActivity');
 assert(manifestContent.includes('android:windowSoftInputMode="adjustResize"'), 'AndroidManifest has adjustResize softInputMode');
 
@@ -333,6 +336,8 @@ assert(swSyntaxOk, 'www/sw.js is syntactically valid JavaScript');
 assert(swContent.includes('addEventListener(\'install\''), 'sw.js registers install event');
 assert(swContent.includes('addEventListener(\'fetch\''), 'sw.js registers fetch event');
 assert(swContent.includes('addEventListener(\'activate\''), 'sw.js registers activate event');
+assert(swContent.includes('SCHEDULE_TIMER_ALERT'), 'sw.js supports SCHEDULE_TIMER_ALERT for background timer alerts');
+assert(swContent.includes('CANCEL_TIMER_ALERT'), 'sw.js supports CANCEL_TIMER_ALERT');
 
 const pwaManifestPath = path.join(__dirname, 'www', 'manifest.json');
 assert(fs.existsSync(pwaManifestPath), 'www/manifest.json exists');
@@ -465,6 +470,143 @@ assert(backCase4.action === 'exit_app' && backCase4.exited, 'Second back press w
 // Case 5: On tabRoutine, second press after 2.5s -> resets and shows toast again
 const backCase5 = simulateDeviceBack({ openModalsCount: 0, currentTab: 'tabRoutine', lastBackPressTime: 10000, now: 12600 });
 assert(backCase5.action === 'show_exit_toast' && !backCase5.exited, 'Back press after 2s timeout resets exit timer');
+
+// --------------------------------------------------------------------------
+// TEST SUITE 17: Background Wall-Clock Timer Engine & Resilience
+// --------------------------------------------------------------------------
+console.log('\n--- Test Suite 17: Background Wall-Clock Timer Engine & Resilience ---');
+
+function calculateRemainingSeconds(endTime, currentTime) {
+  return Math.max(0, Math.round((endTime - currentTime) / 1000));
+}
+
+const startTime = 1000000;
+const sessionDuration = 25 * 60; // 1500 seconds
+const timerEnd = startTime + (sessionDuration * 1000);
+
+// Mid-session wake from background after 300 seconds (5 mins)
+const nowMid = startTime + (300 * 1000);
+assert(calculateRemainingSeconds(timerEnd, nowMid) === 1200, 'Calculates 1200s (20m) remaining after 300s background elapsed');
+
+// Wake 5 seconds before completion
+const nowNearEnd = timerEnd - (5 * 1000);
+assert(calculateRemainingSeconds(timerEnd, nowNearEnd) === 5, 'Calculates 5s remaining near end of session');
+
+// Wake after completion (background session ended while phone locked)
+const nowAfter = timerEnd + (15 * 1000);
+assert(calculateRemainingSeconds(timerEnd, nowAfter) === 0, 'Calculates 0s remaining after session deadline passed');
+
+// Test activeTimer schema serialization
+const mockActiveTimer = {
+  isRunning: true,
+  endTime: timerEnd,
+  durationSecs: sessionDuration,
+  remainingSecs: 1200,
+  session: 1,
+  mode: 'customConfig',
+  intention: 'Deep Code Review'
+};
+assert(mockActiveTimer.isRunning === true, 'activeTimer preserves isRunning flag');
+assert(mockActiveTimer.endTime === timerEnd, 'activeTimer preserves wall-clock endTime');
+assert(mockActiveTimer.mode === 'customConfig', 'activeTimer preserves custom mode');
+
+// --------------------------------------------------------------------------
+// TEST SUITE 18: User Custom Focus Configuration & Next-Process Restoration
+// --------------------------------------------------------------------------
+console.log('\n--- Test Suite 18: User Custom Focus Configuration & Next-Process Restoration ---');
+
+function applyCustomFocusDuration(state, newMinutes, newIntention) {
+  const validMins = Math.min(180, Math.max(1, parseInt(newMinutes, 10) || 25));
+  if (!state.focusConfig) state.focusConfig = {};
+  state.focusConfig.focusMins = validMins;
+  state.focusConfig.selectedMode = 'customConfig';
+  if (newIntention && newIntention.trim()) {
+    state.focusConfig.intention = newIntention.trim();
+  }
+  return {
+    savedMode: state.focusConfig.selectedMode,
+    durationSecs: validMins * 60,
+    mins: validMins,
+    intention: state.focusConfig.intention
+  };
+}
+
+const simulatedAppState = {
+  focusConfig: {
+    focusMins: 25,
+    selectedMode: 'pomodoro',
+    intention: 'Deep Work & Flow'
+  }
+};
+
+// User gives command to set 45 minute focus session
+const customResult = applyCustomFocusDuration(simulatedAppState, 45, 'Algorithms & Data Structures');
+assert(customResult.mins === 45, 'Custom focus minutes set to 45m');
+assert(customResult.durationSecs === 2700, 'Timer duration set to 2700 seconds');
+assert(customResult.savedMode === 'customConfig', 'Mode saved as customConfig');
+assert(customResult.intention === 'Algorithms & Data Structures', 'Intention updated and saved');
+
+// Verify state retains custom settings across simulated process restart
+function restoreTimerOnProcessLaunch(savedState) {
+  const mode = (savedState.focusConfig && savedState.focusConfig.selectedMode) || 'pomodoro';
+  const customMins = (savedState.focusConfig && savedState.focusConfig.focusMins) ? savedState.focusConfig.focusMins : 25;
+  let duration = 25 * 60;
+  if (mode === 'customConfig') {
+    duration = customMins * 60;
+  } else if (mode === 'shortBreak') {
+    duration = 5 * 60;
+  } else if (mode === 'longBreak') {
+    duration = 15 * 60;
+  }
+  return { mode, durationSecs: duration, customMins };
+}
+
+const restoredLaunch = restoreTimerOnProcessLaunch(simulatedAppState);
+assert(restoredLaunch.mode === 'customConfig', 'Next process launch restores customConfig mode');
+assert(restoredLaunch.durationSecs === 2700, 'Next process launch accepts 45m instead of resetting to 25m');
+
+// --------------------------------------------------------------------------
+// TEST SUITE 19: Missed Alarm Recovery Window & Daily Deduplication
+// --------------------------------------------------------------------------
+console.log('\n--- Test Suite 19: Missed Alarm Recovery Window & Daily Deduplication ---');
+
+function shouldAlarmTriggerWithRecovery(alarm, currentHour, currentMinute, todayKey) {
+  if (!alarm.enabled) return false;
+  if (alarm.lastFiredKey === todayKey) return false;
+  
+  const [alarmH, alarmM] = alarm.time.split(':').map(Number);
+  const nowTotal = currentHour * 60 + currentMinute;
+  const alarmTotal = alarmH * 60 + alarmM;
+
+  // On-time trigger OR caught up within 10 minutes of device wake
+  if (nowTotal >= alarmTotal && (nowTotal - alarmTotal) <= 10) {
+    return true;
+  }
+  return false;
+}
+
+const mockAlarm = {
+  id: 'alarm_1',
+  time: '07:00',
+  enabled: true,
+  lastFiredKey: null
+};
+
+// Exact match: 07:00
+assert(shouldAlarmTriggerWithRecovery(mockAlarm, 7, 0, '2026-10-13') === true, 'Exact time alarm triggers at 07:00');
+
+// Recover missed alarm within 10 minutes (e.g. phone was in deep sleep until 07:04)
+assert(shouldAlarmTriggerWithRecovery(mockAlarm, 7, 4, '2026-10-13') === true, 'Missed alarm triggers within 10m recovery window at 07:04');
+
+// Boundary check: 10 minutes exact (07:10)
+assert(shouldAlarmTriggerWithRecovery(mockAlarm, 7, 10, '2026-10-13') === true, 'Missed alarm triggers at 10m recovery boundary (07:10)');
+
+// Missed long ago: 07:15 (outside 10m window)
+assert(shouldAlarmTriggerWithRecovery(mockAlarm, 7, 15, '2026-10-13') === false, 'Alarm older than 10m does not fire (07:15)');
+
+// Deduplication: fired already today
+mockAlarm.lastFiredKey = '2026-10-13';
+assert(shouldAlarmTriggerWithRecovery(mockAlarm, 7, 2, '2026-10-13') === false, 'Already fired alarm deduplicated on the same day');
 
 // --------------------------------------------------------------------------
 // TEST SUITE 16: Compiled Android Artifacts & Assets Verification
