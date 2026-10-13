@@ -4813,6 +4813,8 @@
     // 4. Android Soft Keyboard (Virtual Keyboard) view adjustment
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', () => {
+        const isKeyboardOpen = window.visualViewport.height < (window.innerHeight * 0.78);
+        document.body.classList.toggle('keyboard-open', isKeyboardOpen);
         const active = document.activeElement;
         if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) {
           setTimeout(() => {
@@ -4821,6 +4823,68 @@
         }
       });
     }
+
+    // 5. Touch Swipe-Down-To-Dismiss for all Modal Sheets (Native mobile ergonomics)
+    document.querySelectorAll('.modal-backdrop').forEach((backdrop) => {
+      const sheet = backdrop.querySelector('.modal-sheet');
+      if (!sheet) return;
+
+      let startY = 0;
+      let currentY = 0;
+      let isDragging = false;
+      let startTime = 0;
+
+      sheet.addEventListener('touchstart', (e) => {
+        if (sheet.scrollTop > 5) return;
+        startY = e.touches[0].clientY;
+        currentY = startY;
+        startTime = Date.now();
+        isDragging = true;
+        sheet.style.transition = 'none';
+      }, { passive: true });
+
+      sheet.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        currentY = e.touches[0].clientY;
+        const deltaY = currentY - startY;
+        if (deltaY > 0) {
+          sheet.style.transform = `translateY(${deltaY}px)`;
+        } else {
+          sheet.style.transform = '';
+        }
+      }, { passive: true });
+
+      sheet.addEventListener('touchend', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        const deltaY = currentY - startY;
+        const elapsedTime = Date.now() - startTime;
+        const velocity = deltaY / Math.max(elapsedTime, 1);
+
+        sheet.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
+
+        if (deltaY > 85 || (deltaY > 35 && velocity > 0.4)) {
+          sheet.style.transform = 'translateY(100%)';
+          setTimeout(() => {
+            const closeBtn = sheet.querySelector('.modal-close-btn, .btn-secondary, [data-action="close"]');
+            if (closeBtn) {
+              closeBtn.click();
+            } else {
+              backdrop.classList.remove('open');
+            }
+            sheet.style.transform = '';
+            sheet.style.transition = '';
+            triggerVibrate([15]);
+          }, 200);
+        } else {
+          sheet.style.transform = 'translateY(0)';
+          setTimeout(() => {
+            sheet.style.transform = '';
+            sheet.style.transition = '';
+          }, 220);
+        }
+      });
+    });
 
     console.log('Daily Routine Android App initialized successfully with Service Worker offline & notification suite.');
   }

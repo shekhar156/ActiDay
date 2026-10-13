@@ -183,11 +183,12 @@ html, body {
   -webkit-touch-callout: none;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* Allow text selection in inputs and textareas */
-input, textarea {
+/* Allow text selection in inputs, textareas and editable fields */
+input, textarea, [contenteditable="true"], select {
   user-select: text !important;
   -webkit-user-select: text !important;
 }
@@ -721,17 +722,38 @@ body.theme-light .theme-pill-btn:hover {
   overscroll-behavior-y: contain;
   padding: 14px 16px calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + 20px);
   position: relative;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .app-main-content::-webkit-scrollbar {
-  width: 4px;
+  display: none;
+  width: 0;
+  height: 0;
 }
 
-.app-main-content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: var(--radius-full);
+/* Seamless native scrollbars across all scroll containers */
+.tab-view,
+.modal-sheet,
+.templates-list,
+.preset-chips-scroll,
+.routine-category-scroll,
+.horizontal-scroll-container,
+.habits-grid {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.tab-view::-webkit-scrollbar,
+.modal-sheet::-webkit-scrollbar,
+.templates-list::-webkit-scrollbar,
+.preset-chips-scroll::-webkit-scrollbar,
+.routine-category-scroll::-webkit-scrollbar,
+.horizontal-scroll-container::-webkit-scrollbar,
+.habits-grid::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* Tab Views */
@@ -2189,6 +2211,34 @@ input:checked + .slider:before {
   z-index: 100;
   box-sizing: border-box;
   transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+/* Hide navigation bar and adapt padding when Android soft keyboard is active */
+body.keyboard-open .bottom-nav-bar {
+  display: none !important;
+}
+
+body.keyboard-open .app-main-content {
+  padding-bottom: 24px !important;
+}
+
+/* Tactile Press Feedback for Touch Devices */
+.nav-tab:active,
+.btn:active,
+.icon-btn:active,
+.category-pill:active,
+.routine-item:active,
+.habit-card:active,
+.timer-mode-btn:active,
+.preset-btn:active,
+.ambient-chip:active,
+.control-btn:active,
+.quick-action-pill:active,
+.template-card:active,
+.badge-card:active {
+  transform: scale(0.96);
+  opacity: 0.92;
+  transition: transform 0.08s ease, opacity 0.08s ease;
 }
 
 .nav-tab {
